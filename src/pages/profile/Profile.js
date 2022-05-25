@@ -1,31 +1,39 @@
 import { useState } from "react"
 import { SingleCarousel } from "../../components"
 import { AcademicCapIcon, CakeIcon, LocationMarkerIcon, PlusIcon } from '@heroicons/react/outline'
+import { Link } from "react-router-dom"
 
-const Profile = () => {
+const Profile = ({handleImageSelect}) => {
 
 
     const [images, setImages] = useState([
             {
-                id: 1
+                id: 1,
+                name: `image 1`
             },
             {
-                id: 2
+                id: 2,
+                name: `image 2`
             },
             {
-                id: 3
+                id: 3,
+                name: `image 3`
             },
             {
-                id: 4
+                id: 4,
+                name: `image 4`
             },
             {
-                id: 5
+                id: 5,
+                name: `image 5`
             },
             {
-                id: 6
+                id: 6,
+                name: `image 6`
             },
             {
-                id: 7
+                id: 7,
+                name: `image 7`
             },
         ])
 
@@ -115,8 +123,12 @@ const Profile = () => {
                         {
                             images.map((item, idx) => (
                                     <div 
+                                    onClick={() => handleImageSelect(item)}
                                     className='bg-zinc-600 w-full h-32 rounded-lg transition-all ease duration-200 hover:-mt-1 hover:shadow-xl'
                                     key={idx}>
+                                    <Link to={`/profile/${item.id}`}>
+                                        {item.name}
+                                    </Link>
                                 </div>)
                             )
                         }

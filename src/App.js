@@ -1,9 +1,17 @@
 import logo from './logo.svg';
 import './App.css';
 import { Routes, Route, Link } from "react-router-dom";
-import { Profile, Landing } from './pages'
+import { Profile, Landing, ImageDetail } from './pages'
+import { useState } from 'react';
 
 function App() {
+
+  const [selectedImage, setSelectedImage] = useState({})
+
+  const handleImageSelect = (image) => {
+    setSelectedImage(image)
+  }
+
   return (
     <div className="bg-stone-900 min-h-screen">
       <nav className='w-full p-4 bg-stone-900 text-gray-200'>
@@ -26,7 +34,11 @@ function App() {
 
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile">
+          <Route index element={<Profile handleImageSelect={handleImageSelect}/>} />
+          <Route path =":id" element={<ImageDetail image={selectedImage}/>} />
+
+        </Route>
       </Routes>
 
       <footer className='flex justify-around items-center h-48 w-full bg-black text-stone-200 p-8'>
