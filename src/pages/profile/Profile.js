@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { SingleCarousel } from "../../components"
-import { AcademicCapIcon, CakeIcon, LocationMarkerIcon } from '@heroicons/react/outline'
+import { AcademicCapIcon, CakeIcon, LocationMarkerIcon, PlusIcon } from '@heroicons/react/outline'
 
 const Profile = () => {
 
@@ -31,8 +31,18 @@ const Profile = () => {
 
     return (
         <main className='m-8 space-y-8'>
+        <div className='absolute flex group left-0 bottom-0 h-14 w-24'>
+            <div className='flex justify-center items-center z-40 ml-2 left-0 bottom-0 w-14 h-14 rounded-full bg-zinc-600 shadow-lg group-hover:shadow-2xl'>
+                <PlusIcon className='w-5 h-5 text-slate-200 group-hover:scale-110'/>
+            </div>
+            <div className='absolute flex self-center left-0 bottom-1 ml-6 rounded-md z-30 transition-all ease duration-300 w-0 group-hover:w-60 opacity-0 group-hover:opacity-100 h-12 bg-zinc-600 shadow-xl text-center border border-zinc-400'>
+                <div className='flex items-center justify-center w-full h-full hover:bg-zinc-700 text-slate-200'>
+                    Create
+                </div>
+            </div>
+        </div>
             <section className='flex items-end h-60 bg-zinc-700 rounded-lg text-white p-8'>
-                <div class='flex flex-row h-24 gap-4'>
+                <div className='flex flex-row h-24 gap-4'>
                     <div className='h-24 w-24 bg-gray-200 rounded-full border-gray-800 border-4'></div>
                     
                     <div className='flex flex-col justify-between'>
@@ -101,7 +111,7 @@ const Profile = () => {
                         Images
                     </h1>
                     
-                    <div class='grid grid-cols-3 grid-flow-row auto-rows-auto gap-2'>
+                    <div className='grid grid-cols-3 grid-flow-row auto-rows-auto gap-2'>
                         {
                             images.map((item, idx) => (
                                     <div 
