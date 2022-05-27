@@ -6,12 +6,6 @@ import { useState } from 'react';
 
 function App() {
 
-  const [selectedImage, setSelectedImage] = useState({})
-
-  const handleImageSelect = (image) => {
-    setSelectedImage(image)
-  }
-
   return (
     <div className="bg-stone-900 min-h-screen">
       <nav className='w-full p-4 bg-stone-900 text-gray-200'>
@@ -35,8 +29,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/profile">
-          <Route index element={<Profile handleImageSelect={handleImageSelect}/>} />
-          <Route path =":id" element={<ImageDetail image={selectedImage}/>} />
+          <Route index element={<Profile />} />
+          <Route path =":id" element={<ImageDetail />} />
 
         </Route>
       </Routes>

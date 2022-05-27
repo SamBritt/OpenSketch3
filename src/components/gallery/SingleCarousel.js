@@ -9,7 +9,7 @@ const SingleCarousel = ({ images }) => {
                 <ArrowLeftIcon className='h-5 w-5 text-stone-200 transition-all ease duration-200 hover:scale-150'/>
             </div>
 
-            <section className='scroller grid grid-rows-1 grid-flow-col h-48 gap-x-2 overflow-x-auto'>
+            <section className='scroller grid grid-rows-1 grid-flow-col auto-cols-min h-48 gap-x-2 overflow-x-auto'>
                 {
                     images && images.map((item) => (
                         <div

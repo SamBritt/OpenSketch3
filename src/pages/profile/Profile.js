@@ -1,54 +1,37 @@
-import { useState } from "react"
-import { SingleCarousel } from "../../components"
+import { useEffect, useState } from "react"
+import { Gallery, SingleCarousel } from "../../components"
 import { AcademicCapIcon, CakeIcon, LocationMarkerIcon, PlusIcon } from '@heroicons/react/outline'
-import { Link } from "react-router-dom"
+import { Link, Outlet } from "react-router-dom"
+import data from '../../data.json'
 
-const Profile = ({handleImageSelect}) => {
+const Profile = () => {
 
 
-    const [images, setImages] = useState([
-            {
-                id: 1,
-                name: `image 1`
-            },
-            {
-                id: 2,
-                name: `image 2`
-            },
-            {
-                id: 3,
-                name: `image 3`
-            },
-            {
-                id: 4,
-                name: `image 4`
-            },
-            {
-                id: 5,
-                name: `image 5`
-            },
-            {
-                id: 6,
-                name: `image 6`
-            },
-            {
-                id: 7,
-                name: `image 7`
-            },
-        ])
+    const [images, setImages] = useState([])
+    useEffect(() => {
+        const images = data.images.filter(item => item.userId === data.users[0].id)
+
+
+        setImages(images)
+        return
+    }, [images.length])
+
+
 
     return (
         <main className='m-8 space-y-8'>
-        <div className='absolute flex group left-0 bottom-0 h-14 w-24'>
-            <div className='flex justify-center items-center z-40 ml-2 left-0 bottom-0 w-14 h-14 rounded-full bg-zinc-600 shadow-lg group-hover:shadow-2xl'>
-                <PlusIcon className='w-5 h-5 text-slate-200 group-hover:scale-110'/>
-            </div>
-            <div className='absolute flex self-center left-0 bottom-1 ml-6 rounded-md z-30 transition-all ease duration-300 w-0 group-hover:w-60 opacity-0 group-hover:opacity-100 h-12 bg-zinc-600 shadow-xl text-center border border-zinc-400'>
-                <div className='flex items-center justify-center w-full h-full hover:bg-zinc-700 text-slate-200'>
-                    Create
+            <div className='absolute flex group left-0 bottom-0 h-14 w-24'>
+                <div className='flex justify-center items-center z-40 ml-2 left-0 bottom-0 w-14 h-14 rounded-full bg-zinc-600 shadow-lg group-hover:shadow-2xl'>
+                    <PlusIcon className='w-5 h-5 text-slate-200 group-hover:scale-110'/>
+                </div>
+
+                <div className='absolute flex self-center left-0 bottom-1 ml-6 rounded-md z-30 transition-all ease duration-300 w-0 group-hover:w-60 opacity-0 group-hover:opacity-100 h-12 bg-zinc-600 shadow-xl text-center border border-zinc-400'>
+                    <div className='flex items-center justify-center w-full h-full hover:bg-zinc-700 text-slate-200'>
+                        Create
+                    </div>
                 </div>
             </div>
-        </div>
+
             <section className='flex items-end h-60 bg-zinc-700 rounded-lg text-white p-8'>
                 <div className='flex flex-row h-24 gap-4'>
                     <div className='h-24 w-24 bg-gray-200 rounded-full border-gray-800 border-4'></div>
@@ -119,20 +102,7 @@ const Profile = ({handleImageSelect}) => {
                         Images
                     </h1>
                     
-                    <div className='grid grid-cols-3 grid-flow-row auto-rows-auto gap-2'>
-                        {
-                            images.map((item, idx) => (
-                                    <div 
-                                    onClick={() => handleImageSelect(item)}
-                                    className='bg-zinc-600 w-full h-32 rounded-lg transition-all ease duration-200 hover:-mt-1 hover:shadow-xl'
-                                    key={idx}>
-                                    <Link to={`/profile/${item.id}`}>
-                                        {item.name}
-                                    </Link>
-                                </div>)
-                            )
-                        }
-                    </div>
+                    <Gallery images={images} />
                 </div>
             </section>
         </main>
