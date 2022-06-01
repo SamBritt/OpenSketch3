@@ -5,7 +5,7 @@ import {
     EyeIcon as EyeSolid
 } from "@heroicons/react/solid"
 import { useEffect, useState } from "react"
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { CommentSection, Gallery } from "../../components";
 import data from '../../data.json'
 
@@ -20,7 +20,7 @@ const ImageDetail = () => {
     })
 
     useEffect(() => {
-        const images = data.images.filter(item => item.userId === data.users[0].id)
+        const images = data.images.filter(item => item.userName === params.userName)
         const currentImage = data.images.find(item => item.id === parseInt(params.id))
         const currentComments = data.comments.filter(comment => comment.imageId === currentImage.id)
         
@@ -84,7 +84,9 @@ const ImageDetail = () => {
                                 </span>
 
                                 <span className='underline font-bold'>
-                                    sambritt2
+                                    <Link to={`/${state.currentImage.userName}`}>
+                                        {state.currentImage.userName}
+                                    </Link>
                                 </span>
                             </div>
 

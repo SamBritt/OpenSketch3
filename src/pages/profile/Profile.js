@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react"
 import { Gallery, SingleCarousel } from "../../components"
 import { AcademicCapIcon, CakeIcon, LocationMarkerIcon, PlusIcon } from '@heroicons/react/outline'
-import { Link, Outlet } from "react-router-dom"
+import { Link, Outlet, useParams } from "react-router-dom"
 import data from '../../data.json'
 
 const Profile = () => {
 
+    const params = useParams()
+
 
     const [images, setImages] = useState([])
     useEffect(() => {
-        const images = data.images.filter(item => item.userId === data.users[0].id)
+        console.log(params.userName)
+        const images = data.images.filter(item => item.userName === params.userName)
 
 
         setImages(images)

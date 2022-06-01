@@ -16,7 +16,7 @@ const Landing = () => {
             images: images
         }))
         return
-    }, [state])
+    }, [state.images.length])
 
 
     return (

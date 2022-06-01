@@ -20,7 +20,7 @@ function App() {
             </li>
 
             <li>
-              <Link to="/profile">About</Link>
+              <Link to="/about">About</Link>
             </li>
           </div>
         </ul>
@@ -28,7 +28,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/profile">
+        <Route path=":userName">
           <Route index element={<Profile />} />
           <Route path =":id" element={<ImageDetail />} />
 
