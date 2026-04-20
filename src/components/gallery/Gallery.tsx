@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
+import { Image } from '../../types'
 
-const Gallery = ({ images, condensed = false }) => {
+const Gallery = ({ images = [], condensed = false }: { images: Image[], condensed?: boolean }) => {
 
     const gridStyle = () => {
         const styles = [

@@ -1,23 +1,17 @@
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { Gallery, SingleCarousel } from "../../components"
 import { AcademicCapIcon, CakeIcon, LocationMarkerIcon, PlusIcon } from '@heroicons/react/outline'
 import { Link, Outlet, useParams } from "react-router-dom"
-import data from '../../data.json'
+import { useImageStore } from "../../store/imageStore"
 
 const Profile = () => {
 
     const params = useParams()
+    const { userImages, fetchUserImages } = useImageStore()
 
-
-    const [images, setImages] = useState([])
     useEffect(() => {
-        console.log(params.userName)
-        const images = data.images.filter(item => item.userName === params.userName)
-
-
-        setImages(images)
-        return
-    }, [images.length])
+        if (params.userName) fetchUserImages(params.userName)
+    }, [params.userName])
 
 
 
@@ -60,7 +54,7 @@ const Profile = () => {
                 </div>
             </section>
 
-            <SingleCarousel images={images}/>
+            <SingleCarousel images={userImages}/>
 
             <section className='flex flex-row gap-x-8'>
                 <div className='flex flex-col h-full w-1/2 gap-y-4'>
@@ -105,7 +99,7 @@ const Profile = () => {
                         Images
                     </h1>
                     
-                    <Gallery images={images} />
+                    <Gallery images={userImages} />
                 </div>
             </section>
         </main>

@@ -4,43 +4,32 @@ import {
     ChatAlt2Icon as ChatAltSolid,
     EyeIcon as EyeSolid
 } from "@heroicons/react/solid"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { Link, useParams } from "react-router-dom";
 import { CommentSection, Gallery } from "../../components";
-import data from '../../data.json'
-
+import { useImageStore } from "../../store/imageStore"
+import { useCommentStore } from "../../store/commentStore"
 
 const ImageDetail = () => {
-    let params = useParams()
+    const params = useParams()
 
-    const [state, setState] = useState({
-        currentImage: {},
-        userImages: {},
-        comments: {}
-    })
+    const { currentImage, userImages, fetchImage, fetchUserImages } = useImageStore()
+    const { comments, fetchComments } = useCommentStore()
 
     useEffect(() => {
-        const images = data.images.filter(item => item.userName === params.userName)
-        const currentImage = data.images.find(item => item.id === parseInt(params.id))
-        const currentComments = data.comments.filter(comment => comment.imageId === currentImage.id)
-        
-        setState(prev => ({
-            ...prev,
-            userImages: images,
-            currentImage: currentImage,
-            comments: currentComments
-        }))
-        return
-    }, [params])
-    
+        if (!params.id || !params.userName) return
+        fetchImage(parseInt(params.id))
+        fetchUserImages(params.userName)
+        fetchComments(parseInt(params.id))
+    }, [params.id, params.userName])
+
     return (
         <main className='flex flex-row m-8 gap-x-6'>
             <div className='flex flex-col lg:items-start w-full lg:w-2/3 h-full text-white gap-y-4'>
                 <section className='bg-zinc-500 w-full h-96 rounded-t-lg'>
-                    {state.currentImage.name}
+                    {currentImage?.name}
                 </section>
 
-                
                 <section className='flex flex-col w-full gap-y-8 p-8'>
                     <section className='flex w-full gap-x-6'>
                         <div className='flex gap-1 group'>
@@ -66,11 +55,11 @@ const ImageDetail = () => {
                     <div className='flex flex-row h-24 gap-4'>
                         <div className='h-20 w-20 bg-gray-200 rounded-full border-gray-800 border-4'>
                         </div>
-                
+
                         <div className='flex flex-col flex-1'>
                             <div className='flex flex-row items-center justify-between'>
                                 <h1 className='flex text-3xl font-bold'>
-                                    {state.currentImage.name}
+                                    {currentImage?.name}
                                 </h1>
 
                                 <span>
@@ -84,8 +73,8 @@ const ImageDetail = () => {
                                 </span>
 
                                 <span className='underline font-bold'>
-                                    <Link to={`/${state.currentImage.userName}`}>
-                                        {state.currentImage.userName}
+                                    <Link to={`/${currentImage?.userName}`}>
+                                        {currentImage?.userName}
                                     </Link>
                                 </span>
                             </div>
@@ -93,21 +82,21 @@ const ImageDetail = () => {
                             <div className='flex gap-2'>
                                 <div className='flex gap-1'>
                                     <HeartSolid className='w-5 h-5 text-pink-200'/>
-                                    <span>{ state.currentImage.likes } Likes</span>    
+                                    <span>{ currentImage?.likes } Likes</span>
                                 </div>
 
                                 <span className='font-bold text-cyan-200'> / </span>
 
                                 <div className='flex gap-1'>
                                     <ChatAltSolid className='w-5 h-5 text-cyan-200'/>
-                                    <span>{ state.comments.length } Comments</span>   
+                                    <span>{ comments.length } Comments</span>
                                 </div>
 
                                 <span className='font-bold text-cyan-200'> / </span>
 
                                 <div className='flex gap-1'>
                                     <EyeSolid className='w-5 h-5 text-amber-200'/>
-                                    <span>{ state.currentImage.views } Views</span>  
+                                    <span>{ currentImage?.views } Views</span>
                                 </div>
                             </div>
                         </div>
@@ -115,17 +104,17 @@ const ImageDetail = () => {
 
                     <section className='flex h-20'>
                         <p className='text-sm'>
-                            { state.currentImage.description }
+                            { currentImage?.description }
                         </p>
                     </section>
 
-                    <CommentSection comments={state.comments}/>
+                    <CommentSection comments={comments}/>
                 </section>
             </div>
 
             <section className='hidden lg:flex lg:flex-col w-1/3'>
-                <Gallery 
-                    images={state.userImages}
+                <Gallery
+                    images={userImages}
                     condensed/>
             </section>
         </main>
