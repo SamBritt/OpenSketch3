@@ -18,6 +18,7 @@ export const useImageStore = create<ImageStore>((set) => ({
 
   fetchImages: async () => {
     const { data } = await api.get<Image[]>('/images')
+    console.log('fetchImages response:', data)
     set({ images: data })
   },
 
