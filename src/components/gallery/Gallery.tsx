@@ -29,8 +29,12 @@ const Gallery = ({ images = [], condensed = false }: { images: Image[], condense
                         className='group'
                         to={`/${item.userName}/${item.id}`}
                         key={idx}>
-                        <div className='relative bg-zinc-600 w-full h-0 pb-full rounded-lg transition-all ease duration-200 group-hover:-translate-y-1 hover:shadow-xl'>
-
+                        <div className='relative bg-zinc-600 w-full h-0 pb-full rounded-lg transition-all ease duration-200 group-hover:-translate-y-1 hover:shadow-xl overflow-hidden'>
+                            <img
+                                src={item.imageUrl}
+                                alt={item.name}
+                                className='absolute inset-0 w-full h-full object-cover'
+                            />
                             <div className='absolute bottom-0 left-0 bg-zinc-800 w-full rounded-b-lg opacity-0 h-0 group-hover:opacity-100 group-hover:h-1/2 transition-all ease duration-300'>
                                 {item.name}
                             </div>

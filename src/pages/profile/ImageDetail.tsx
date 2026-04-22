@@ -13,7 +13,7 @@ import { useCommentStore } from "../../store/commentStore"
 const ImageDetail = () => {
     const params = useParams()
 
-    const { currentImage, userImages, fetchImage, fetchUserImages } = useImageStore()
+    const { currentImage, currentImageLoading, userImages, fetchImage, fetchUserImages } = useImageStore()
     const { comments, fetchComments } = useCommentStore()
 
     useEffect(() => {
@@ -23,11 +23,25 @@ const ImageDetail = () => {
         fetchComments(parseInt(params.id))
     }, [params.id, params.userName])
 
+    if (currentImageLoading) return null
+
+    if (!currentImage) return (
+        <main className='flex items-center justify-center m-8 text-gray-400'>
+            Image not found.
+        </main>
+    )
+
     return (
         <main className='flex flex-row m-8 gap-x-6'>
             <div className='flex flex-col lg:items-start w-full lg:w-2/3 h-full text-white gap-y-4'>
-                <section className='bg-zinc-500 w-full h-96 rounded-t-lg'>
-                    {currentImage?.name}
+                <section className='w-full rounded-t-lg overflow-hidden'>
+                    {currentImage && (
+                        <img
+                            src={currentImage.imageUrl}
+                            alt={currentImage.name}
+                            className='w-full object-contain'
+                        />
+                    )}
                 </section>
 
                 <section className='flex flex-col w-full gap-y-8 p-8'>

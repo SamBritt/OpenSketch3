@@ -1,7 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
 import { Routes, Route, Link } from "react-router-dom";
-import { Profile, Landing, ImageDetail } from './pages'
+import { Profile, Landing, ImageDetail, Create } from './pages'
 import { useState } from 'react';
 
 function App() {
@@ -22,12 +22,17 @@ function App() {
             <li>
               <Link to="/about">About</Link>
             </li>
+
+            <li>
+              <Link to="/create">Create</Link>
+            </li>
           </div>
         </ul>
       </nav>
 
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="create" element={<Create />} />
         <Route path=":userName">
           <Route index element={<Profile />} />
           <Route path =":id" element={<ImageDetail />} />

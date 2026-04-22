@@ -5,6 +5,7 @@ import { Image } from '../types'
 interface ImageStore {
   images: Image[]
   currentImage: Image | null
+  currentImageLoading: boolean
   userImages: Image[]
   fetchImages: () => Promise<void>
   fetchImage: (id: number) => Promise<void>
@@ -14,21 +15,34 @@ interface ImageStore {
 export const useImageStore = create<ImageStore>((set) => ({
   images: [],
   currentImage: null,
+  currentImageLoading: false,
   userImages: [],
 
   fetchImages: async () => {
-    const { data } = await api.get<Image[]>('/images')
-    console.log('fetchImages response:', data)
-    set({ images: data })
+    try {
+      const { data } = await api.get<Image[]>('/images')
+      set({ images: data })
+    } catch {
+      set({ images: [] })
+    }
   },
 
   fetchImage: async (id) => {
-    const { data } = await api.get<Image>(`/images/${id}`)
-    set({ currentImage: data })
+    set({ currentImageLoading: true, currentImage: null })
+    try {
+      const { data } = await api.get<Image>(`/images/${id}`)
+      set({ currentImage: data, currentImageLoading: false })
+    } catch {
+      set({ currentImage: null, currentImageLoading: false })
+    }
   },
 
   fetchUserImages: async (userName) => {
-    const { data } = await api.get<Image[]>(`/images/username/${userName}`)
-    set({ userImages: data })
+    try {
+      const { data } = await api.get<Image[]>(`/images/username/${userName}`)
+      set({ userImages: data })
+    } catch {
+      set({ userImages: [] })
+    }
   },
 }))
