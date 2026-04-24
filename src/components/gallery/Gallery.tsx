@@ -1,49 +1,19 @@
-import { Link } from "react-router-dom"
 import { Image } from '@/types'
+import GalleryCard from './GalleryCard'
 
 const Gallery = ({ images = [], condensed = false }: { images: Image[], condensed?: boolean }) => {
+  const gridClass = [
+    'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2',
+    !condensed && 'xl:grid-cols-4',
+  ].filter(Boolean).join(' ')
 
-    const gridStyle = () => {
-        const styles = [
-            `grid`,
-            `grid-cols-1`,
-            `sm:grid-cols-2`,
-            `lg:grid-cols-3`,
-            `gap-2`
-        ]
-
-        if (condensed) {
-
-        } else {
-            styles.push(`xl:grid-cols-4`)
-        }
-
-        return styles.join(' ') 
-    }
-
-    return (
-        <div className={gridStyle()}>
-            {
-                images.length && images.map((item, idx) => (
-                    <Link
-                        className='group'
-                        to={`/${item.userName}/${item.id}`}
-                        key={idx}>
-                        <div className='relative bg-zinc-600 w-full h-0 pb-full rounded-lg transition-all ease duration-200 group-hover:-translate-y-1 hover:shadow-xl overflow-hidden'>
-                            <img
-                                src={item.imageUrl}
-                                alt={item.name}
-                                className='absolute inset-0 w-full h-full object-cover'
-                            />
-                            <div className='absolute bottom-0 left-0 bg-zinc-800 w-full rounded-b-lg opacity-0 h-0 group-hover:opacity-100 group-hover:h-1/2 transition-all ease duration-300'>
-                                {item.name}
-                            </div>
-                        </div>
-                    </Link>
-                ))
-            }
-        </div>
-    )
+  return (
+    <div className={gridClass}>
+      {images.map(item => (
+        <GalleryCard key={item.id} item={item} />
+      ))}
+    </div>
+  )
 }
 
 export default Gallery

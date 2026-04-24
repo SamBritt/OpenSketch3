@@ -34,15 +34,17 @@ const ImageDetail = () => {
     return (
         <main className='flex flex-row m-8 gap-x-6'>
             <div className='flex flex-col lg:items-start w-full lg:w-2/3 h-full text-white gap-y-4'>
-                <section className='rounded-t-lg overflow-hidden'>
-                    <img
-                        src={currentImage.imageUrl}
-                        alt={currentImage.name}
-                        width={600}
-                        height={600}
-                        className='block max-w-full'
-                    />
-                </section>
+                {currentImage.imageUrl && (
+                  <section className='rounded-t-lg overflow-hidden'>
+                      <img
+                          src={currentImage.imageUrl}
+                          alt={currentImage.name}
+                          width={600}
+                          height={600}
+                          className='block max-w-full'
+                      />
+                  </section>
+                )}
 
                 <section className='flex flex-col w-full gap-y-8 p-8'>
                     <section className='flex w-full gap-x-6'>

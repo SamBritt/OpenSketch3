@@ -4,7 +4,7 @@ export interface Image {
   userName: string
   name: string
   description: string
-  imageUrl: string
+  imageUrl?: string
   likes: number
   views: number
   liked: boolean
