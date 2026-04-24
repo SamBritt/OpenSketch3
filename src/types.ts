@@ -7,6 +7,7 @@ export interface Image {
   imageUrl: string
   likes: number
   views: number
+  liked: boolean
 }
 
 export interface Comment {
@@ -14,6 +15,7 @@ export interface Comment {
   userId: number
   imageId: number
   comment: string
+  userName: string
 }
 
 export interface User {

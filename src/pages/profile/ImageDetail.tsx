@@ -6,14 +6,14 @@ import {
 } from "@heroicons/react/solid"
 import { useEffect } from "react"
 import { Link, useParams } from "react-router-dom";
-import { CommentSection, Gallery } from "../../components";
-import { useImageStore } from "../../store/imageStore"
-import { useCommentStore } from "../../store/commentStore"
+import { CommentSection, Gallery } from "@/components";
+import { useImageStore } from "@/store/imageStore"
+import { useCommentStore } from "@/store/commentStore"
 
 const ImageDetail = () => {
     const params = useParams()
 
-    const { currentImage, currentImageLoading, userImages, fetchImage, fetchUserImages } = useImageStore()
+    const { currentImage, currentImageLoading, userImages, fetchImage, fetchUserImages, likeImage, unlikeImage } = useImageStore()
     const { comments, fetchComments } = useCommentStore()
 
     useEffect(() => {
@@ -34,27 +34,33 @@ const ImageDetail = () => {
     return (
         <main className='flex flex-row m-8 gap-x-6'>
             <div className='flex flex-col lg:items-start w-full lg:w-2/3 h-full text-white gap-y-4'>
-                <section className='w-full rounded-t-lg overflow-hidden'>
-                    {currentImage && (
-                        <img
-                            src={currentImage.imageUrl}
-                            alt={currentImage.name}
-                            className='w-full object-contain'
-                        />
-                    )}
+                <section className='rounded-t-lg overflow-hidden'>
+                    <img
+                        src={currentImage.imageUrl}
+                        alt={currentImage.name}
+                        width={600}
+                        height={600}
+                        className='block max-w-full'
+                    />
                 </section>
 
                 <section className='flex flex-col w-full gap-y-8 p-8'>
                     <section className='flex w-full gap-x-6'>
-                        <div className='flex gap-1 group'>
-                            <span>
-                                <HeartIcon className='w-5 h-5 text-pink-200 transition-all ease duration-200 group-hover:scale-125'/>
-                            </span>
-
-                            <span className='group-hover:text-pink-200'>
+                        <button
+                            onClick={() => currentImage.liked
+                                ? unlikeImage(currentImage.id)
+                                : likeImage(currentImage.id)
+                            }
+                            className='flex gap-1 group'
+                        >
+                            {currentImage.liked
+                                ? <HeartSolid className='w-5 h-5 text-pink-400' />
+                                : <HeartIcon className='w-5 h-5 text-pink-200 transition-all ease duration-200 group-hover:scale-125' />
+                            }
+                            <span className={currentImage.liked ? 'text-pink-400' : 'group-hover:text-pink-200'}>
                                 Like
                             </span>
-                        </div>
+                        </button>
 
                         <div className='flex gap-1 group'>
                             <span>
@@ -122,7 +128,7 @@ const ImageDetail = () => {
                         </p>
                     </section>
 
-                    <CommentSection comments={comments}/>
+                    <CommentSection comments={comments} imageId={currentImage.id} />
                 </section>
             </div>
 

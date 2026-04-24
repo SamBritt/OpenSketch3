@@ -1,10 +1,20 @@
 import { useRef, useState } from 'react'
-import SketchForm from './SketchForm'
 
 const MAX_HISTORY = 50
 
-export default function Canvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+const PALETTE = [
+  '#000000', '#ffffff', '#6b7280',
+  '#ef4444', '#f97316', '#eab308',
+  '#22c55e', '#06b6d4', '#3b82f6',
+  '#8b5cf6', '#ec4899', '#92400e',
+]
+
+interface Props {
+  canvasRef: React.RefObject<HTMLCanvasElement>
+  onDone: (bgColor: string) => void
+}
+
+export default function Canvas({ canvasRef, onDone }: Props) {
   const isDrawingRef = useRef(false)
   const undoStackRef = useRef<ImageData[]>([])
   const redoStackRef = useRef<ImageData[]>([])
@@ -14,11 +24,11 @@ export default function Canvas() {
   const [brushSize, setBrushSize] = useState(3)
   const [opacity, setOpacity] = useState(100)
   const [color, setColor] = useState('#000000')
+  const [bgColor, setBgColor] = useState('#ffffff')
   const [eyedropperActive, setEyedropperActive] = useState(false)
   const [hoveredColor, setHoveredColor] = useState<string | null>(null)
   const [undoCount, setUndoCount] = useState(0)
   const [redoCount, setRedoCount] = useState(0)
-  const [showForm, setShowForm] = useState(false)
 
   const getCtx = () => {
     const canvas = canvasRef.current
@@ -136,7 +146,7 @@ export default function Canvas() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Action buttons */}
+      {/* Toolbar */}
       <div className="flex gap-3 items-center">
         {[
           { label: 'Undo', action: undo, disabled: undoCount === 0 },
@@ -153,18 +163,19 @@ export default function Canvas() {
           </button>
         ))}
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => onDone(bgColor)}
           className="ml-auto px-4 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors"
         >
           Done
         </button>
       </div>
 
-      {/* Left panel + canvas */}
+      {/* Left panel + canvas + right panel */}
       <div className="flex gap-5 items-start">
         {/* Left panel */}
         <div className="flex flex-col items-center gap-8 py-1">
-          {/* Brush size slider */}
+
+          {/* Brush size */}
           <div className="flex flex-col items-center gap-2">
             <span className="text-xs text-gray-400 uppercase tracking-wider">Size</span>
             <div style={{ height: 140, width: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -202,7 +213,7 @@ export default function Canvas() {
             />
           </div>
 
-          {/* Opacity slider */}
+          {/* Opacity */}
           <div className="flex flex-col items-center gap-2">
             <span className="text-xs text-gray-400 uppercase tracking-wider">Alpha</span>
             <div style={{ height: 140, width: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -217,6 +228,7 @@ export default function Canvas() {
             </div>
             <span className="text-xs text-gray-500">{opacity}%</span>
           </div>
+
         </div>
 
         {/* Canvas */}
@@ -224,7 +236,8 @@ export default function Canvas() {
           ref={canvasRef}
           width={600}
           height={600}
-          className={`bg-white ${eyedropperActive ? 'cursor-cell' : 'cursor-crosshair'}`}
+          className={eyedropperActive ? 'cursor-cell' : 'cursor-crosshair'}
+          style={{ background: bgColor }}
           onMouseDown={startDraw}
           onMouseMove={draw}
           onMouseUp={stopDraw}
@@ -232,10 +245,48 @@ export default function Canvas() {
           onClick={pickColor}
         />
 
-        {/* Save form */}
-        {showForm && (
-          <SketchForm canvasRef={canvasRef} onClose={() => setShowForm(false)} />
-        )}
+        {/* Right panel: color pickers */}
+        <div className="flex flex-col items-center gap-2 py-1">
+          <span className="text-xs text-gray-400 uppercase tracking-wider">Color</span>
+
+          <div className="relative w-8 h-8 rounded border-2 border-zinc-500 overflow-hidden" title="Custom color">
+            <div className="w-full h-full" style={{ backgroundColor: color }} />
+            <input
+              type="color"
+              value={color}
+              onChange={e => setColor(e.target.value)}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-1">
+            {PALETTE.map(swatch => (
+              <button
+                key={swatch}
+                onClick={() => setColor(swatch)}
+                title={swatch}
+                className={`w-5 h-5 rounded-sm border transition-transform hover:scale-110 ${
+                  color === swatch ? 'border-blue-400 scale-110' : 'border-zinc-600'
+                }`}
+                style={{ backgroundColor: swatch }}
+              />
+            ))}
+          </div>
+
+          <div className="flex flex-col items-center gap-1 mt-2">
+            <span className="text-xs text-gray-400 uppercase tracking-wider">BG</span>
+            <div className="relative w-8 h-8 rounded border-2 border-zinc-500 overflow-hidden" title="Background color">
+              <div className="w-full h-full" style={{ backgroundColor: bgColor }} />
+              <input
+                type="color"
+                value={bgColor}
+                onChange={e => setBgColor(e.target.value)}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   )

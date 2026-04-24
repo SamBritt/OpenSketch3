@@ -1,7 +1,7 @@
-import logo from './logo.svg';
+
 import './App.css';
 import { Routes, Route, Link } from "react-router-dom";
-import { Profile, Landing, ImageDetail, Create } from './pages'
+import { Profile, Landing, ImageDetail, Create } from '@/pages'
 import { useState } from 'react';
 
 function App() {

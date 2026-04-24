@@ -1,8 +1,8 @@
 import { useEffect } from "react"
-import { Gallery, SingleCarousel } from "../../components"
+import { Gallery, SingleCarousel } from "@/components"
 import { AcademicCapIcon, CakeIcon, LocationMarkerIcon, PlusIcon } from '@heroicons/react/outline'
 import { Link, Outlet, useParams } from "react-router-dom"
-import { useImageStore } from "../../store/imageStore"
+import { useImageStore } from "@/store/imageStore"
 
 const Profile = () => {
 

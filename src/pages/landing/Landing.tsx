@@ -1,6 +1,6 @@
 import { useEffect } from "react"
-import { Gallery } from "../../components"
-import { useImageStore } from "../../store/imageStore"
+import { Gallery } from "@/components"
+import { useImageStore } from "@/store/imageStore"
 
 const Landing = () => {
     const { images, fetchImages } = useImageStore()

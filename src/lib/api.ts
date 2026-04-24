@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { API_URL } from '../config'
+import { API_URL } from '@/config'
 
 console.log('API baseURL:', `${API_URL}/api`)
 

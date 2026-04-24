@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import api from '../../lib/api'
+import api from '@/lib/api'
 
 interface Props {
   canvasRef: React.RefObject<HTMLCanvasElement>
+  bgColor: string
   onClose: () => void
 }
 
-export default function SketchForm({ canvasRef, onClose }: Props) {
+export default function SketchForm({ canvasRef, bgColor, onClose }: Props) {
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -24,7 +25,14 @@ export default function SketchForm({ canvasRef, onClose }: Props) {
     setSaving(true)
     setError(null)
     try {
-      const imageUrl = canvas.toDataURL('image/png')
+      const flat = document.createElement('canvas')
+      flat.width = canvas.width
+      flat.height = canvas.height
+      const flatCtx = flat.getContext('2d')!
+      flatCtx.fillStyle = bgColor
+      flatCtx.fillRect(0, 0, flat.width, flat.height)
+      flatCtx.drawImage(canvas, 0, 0)
+      const imageUrl = flat.toDataURL('image/jpeg', 0.9)
       await api.post('/images', {
         name: name.trim(),
         description: description.trim(),

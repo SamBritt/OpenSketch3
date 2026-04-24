@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import api from '../lib/api'
-import { Image } from '../types'
+import api from '@/lib/api'
+import { Image } from '@/types'
 
 interface ImageStore {
   images: Image[]
@@ -10,7 +10,15 @@ interface ImageStore {
   fetchImages: () => Promise<void>
   fetchImage: (id: number) => Promise<void>
   fetchUserImages: (userName: string) => Promise<void>
+  likeImage: (id: number) => Promise<void>
+  unlikeImage: (id: number) => Promise<void>
 }
+
+const updateImage = (state: ImageStore, id: number, data: Image) => ({
+  currentImage: state.currentImage?.id === id ? data : state.currentImage,
+  images: state.images.map(img => img.id === id ? data : img),
+  userImages: state.userImages.map(img => img.id === id ? data : img),
+})
 
 export const useImageStore = create<ImageStore>((set) => ({
   images: [],
@@ -44,5 +52,15 @@ export const useImageStore = create<ImageStore>((set) => ({
     } catch {
       set({ userImages: [] })
     }
+  },
+
+  likeImage: async (id) => {
+    const { data } = await api.post<Image>(`/images/${id}/like`)
+    set(state => updateImage(state, id, data))
+  },
+
+  unlikeImage: async (id) => {
+    const { data } = await api.delete<Image>(`/images/${id}/like`)
+    set(state => updateImage(state, id, data))
   },
 }))
