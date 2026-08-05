@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { useCommentStore } from '@/store/commentStore'
+import { useAuthStore } from '@/store/authStore'
 import { Comment } from '@/types'
+import Avatar from '@/components/Avatar'
 
 const CommentSection = ({ comments, imageId }: { comments: Comment[], imageId: number }) => {
   const { postComment, deleteComment } = useCommentStore()
+  const { user } = useAuthStore()
   const [text, setText] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -22,28 +25,33 @@ const CommentSection = ({ comments, imageId }: { comments: Comment[], imageId: n
     }
   }
 
-  return (
-    <section className='flex flex-col gap-y-4'>
-      <h1 className='flex flex-row items-center gap-x-2 text-lg text-stone-200 font-semibold'>
-        <span>Comments</span>
-        <span className='text-sm'>{comments.length}</span>
-      </h1>
+  const handleDelete = (id: number) => {
+    if (!window.confirm('Delete this comment?')) return
+    deleteComment(id)
+  }
 
-      <div className='flex gap-x-2 w-1/2'>
-        <div className='w-10 h-10 rounded-full bg-zinc-500 shrink-0' />
-        <div className='flex flex-col flex-1 gap-2'>
+  return (
+    <section className="flex flex-col gap-y-4">
+      <h2 className="flex flex-row items-center gap-x-2 text-lg text-da-text font-semibold">
+        <span>Comments</span>
+        <span className="text-sm text-da-subtle">{comments.length}</span>
+      </h2>
+
+      <div className="flex gap-x-2 w-full">
+        <Avatar userName={user?.userName ?? '?'} avatarUrl={user?.avatarUrl} size="md" />
+        <div className="flex flex-col flex-1 gap-2">
           <textarea
             value={text}
             onChange={e => setText(e.target.value)}
             onKeyDown={handleKey}
-            placeholder='Add a comment…'
+            placeholder="Add a comment…"
             rows={2}
-            className='w-full bg-zinc-700 text-gray-200 rounded px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-blue-500 placeholder-zinc-500 resize-none'
+            className="w-full bg-da-elevated border border-da-border text-da-text rounded px-3 py-2 text-sm outline-none focus:border-da-green placeholder-da-muted resize-none transition-colors"
           />
           <button
             onClick={submit}
             disabled={submitting || !text.trim()}
-            className='self-end px-4 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-500 disabled:opacity-40 transition-colors'
+            className="self-end px-4 py-1.5 text-sm bg-da-green hover:bg-da-green-hover text-white rounded disabled:opacity-40 transition-colors"
           >
             {submitting ? 'Posting…' : 'Post'}
           </button>
@@ -51,22 +59,22 @@ const CommentSection = ({ comments, imageId }: { comments: Comment[], imageId: n
       </div>
 
       {comments.length ? comments.map(item => (
-        <div key={item.id} className='flex w-1/2 h-full gap-x-2'>
-          <div className='w-10 h-10 rounded-full bg-zinc-500 shrink-0' />
-          <div className='flex-1 h-full bg-zinc-600 p-4 rounded-md text-sm'>
-            <span className='text-blue-400 font-medium mr-2'>@{item.userName}</span>
-            <span className='text-gray-200'>{item.comment}</span>
+        <div key={item.id} className="flex w-full gap-x-3 items-start">
+          <Avatar userName={item.userName} size="md" />
+          <div className="flex-1 bg-da-elevated border border-da-border rounded-lg p-3 text-sm relative">
+            <span className="text-da-green font-medium">@{item.userName}</span>
+            <p className="text-da-text mt-1">{item.comment}</p>
+            <button
+              onClick={() => handleDelete(item.id)}
+              className="absolute top-2 right-2 text-da-muted hover:text-red-400 text-sm leading-none transition-colors"
+              title="Delete comment"
+            >
+              &#215;
+            </button>
           </div>
-          <button
-            onClick={() => deleteComment(item.id)}
-            className='self-start text-zinc-500 hover:text-red-400 transition-colors text-lg leading-none'
-            title='Delete comment'
-          >
-            ×
-          </button>
         </div>
       )) : (
-        <div className='text-gray-500 text-sm'>No comments yet.</div>
+        <div className="text-da-subtle text-sm">No comments yet.</div>
       )}
     </section>
   )

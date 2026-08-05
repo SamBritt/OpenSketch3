@@ -1,146 +1,118 @@
-import { ChatAltIcon, HeartIcon } from "@heroicons/react/outline";
-import {
-    HeartIcon as HeartSolid,
-    ChatAlt2Icon as ChatAltSolid,
-    EyeIcon as EyeSolid
-} from "@heroicons/react/solid"
-import { useEffect } from "react"
-import { Link, useParams } from "react-router-dom";
-import { CommentSection, Gallery } from "@/components";
-import { useImageStore } from "@/store/imageStore"
-import { useCommentStore } from "@/store/commentStore"
+import { useEffect, useRef } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import { CommentSection, Avatar } from '@/components'
+import GalleryCard from '@/components/gallery/GalleryCard'
+import { useImageStore } from '@/store/imageStore'
+import { useCommentStore } from '@/store/commentStore'
 
 const ImageDetail = () => {
-    const params = useParams()
+  const params = useParams()
+  const commentRef = useRef<HTMLDivElement>(null)
 
-    const { currentImage, currentImageLoading, userImages, fetchImage, fetchUserImages, likeImage, unlikeImage } = useImageStore()
-    const { comments, fetchComments } = useCommentStore()
+  const { currentImage, currentImageLoading, userImages, fetchImage, fetchUserImages, likeImage, unlikeImage } = useImageStore()
+  const { comments, fetchComments } = useCommentStore()
 
-    useEffect(() => {
-        if (!params.id || !params.userName) return
-        fetchImage(parseInt(params.id))
-        fetchUserImages(params.userName)
-        fetchComments(parseInt(params.id))
-    }, [params.id, params.userName])
+  useEffect(() => {
+    if (!params.id || !params.userName) return
+    fetchImage(parseInt(params.id))
+    fetchUserImages(params.userName)
+    fetchComments(parseInt(params.id))
+  }, [params.id, params.userName])
 
-    if (currentImageLoading) return null
+  const scrollToComments = () => commentRef.current?.scrollIntoView({ behavior: 'smooth' })
 
-    if (!currentImage) return (
-        <main className='flex items-center justify-center m-8 text-gray-400'>
-            Image not found.
-        </main>
-    )
+  if (currentImageLoading) return null
 
-    return (
-        <main className='flex flex-row m-8 gap-x-6'>
-            <div className='flex flex-col lg:items-start w-full lg:w-2/3 h-full text-white gap-y-4'>
-                {currentImage.imageUrl && (
-                  <section className='rounded-t-lg overflow-hidden'>
-                      <img
-                          src={currentImage.imageUrl}
-                          alt={currentImage.name}
-                          width={600}
-                          height={600}
-                          className='block max-w-full'
-                      />
-                  </section>
-                )}
+  if (!currentImage) return (
+    <main className="flex items-center justify-center m-8 text-da-subtle">
+      Image not found.
+    </main>
+  )
 
-                <section className='flex flex-col w-full gap-y-8 p-8'>
-                    <section className='flex w-full gap-x-6'>
-                        <button
-                            onClick={() => currentImage.liked
-                                ? unlikeImage(currentImage.id)
-                                : likeImage(currentImage.id)
-                            }
-                            className='flex gap-1 group'
-                        >
-                            {currentImage.liked
-                                ? <HeartSolid className='w-5 h-5 text-pink-400' />
-                                : <HeartIcon className='w-5 h-5 text-pink-200 transition-all ease duration-200 group-hover:scale-125' />
-                            }
-                            <span className={currentImage.liked ? 'text-pink-400' : 'group-hover:text-pink-200'}>
-                                Like
-                            </span>
-                        </button>
+  return (
+    <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      {/* 1. Image */}
+      {currentImage.imageUrl && (
+        <div className="rounded-xl overflow-hidden bg-da-surface border border-da-border">
+          <img
+            src={currentImage.imageUrl}
+            alt={currentImage.name}
+            className="w-full object-contain max-h-[70vh]"
+          />
+        </div>
+      )}
 
-                        <div className='flex gap-1 group'>
-                            <span>
-                                <ChatAltIcon className='w-5 h-5 text-cyan-200 transition-all ease duration-200 group-hover:scale-125'/>
-                            </span>
+      {/* 2. Artist + meta row */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Avatar userName={currentImage.userName} size="sm" />
+          <Link
+            to={`/${currentImage.userName}`}
+            className="text-da-green font-medium hover:underline"
+          >
+            @{currentImage.userName}
+          </Link>
+          <span className="text-da-border">•</span>
+          <span className="text-da-text font-semibold">{currentImage.name}</span>
+        </div>
+        <div className="flex gap-4 text-sm text-da-subtle">
+          <span>&#9829; {currentImage.likes}</span>
+          <span>&#128065; {currentImage.views}</span>
+          <span>&#128172; {comments.length}</span>
+        </div>
+      </div>
 
-                            <span className='group-hover:text-cyan-200'>
-                                Comment
-                            </span>
-                        </div>
-                    </section>
-                    <div className='flex flex-row h-24 gap-4'>
-                        <div className='h-20 w-20 bg-gray-200 rounded-full border-gray-800 border-4'>
-                        </div>
+      {/* 3. Action bar */}
+      <div className="flex gap-3">
+        <button
+          onClick={() => currentImage.liked ? unlikeImage(currentImage.id) : likeImage(currentImage.id)}
+          className={`px-4 py-1.5 rounded text-sm font-medium transition-colors ${
+            currentImage.liked
+              ? 'bg-da-green text-white'
+              : 'border border-da-border text-da-subtle hover:border-da-green'
+          }`}
+        >
+          {currentImage.liked ? '&#9829; Liked' : '&#9825; Like'}
+        </button>
+        <button
+          onClick={scrollToComments}
+          className="border border-da-border text-da-subtle px-4 py-1.5 rounded text-sm hover:border-da-green transition-colors"
+        >
+          &#128172; Comment
+        </button>
+      </div>
 
-                        <div className='flex flex-col flex-1'>
-                            <div className='flex flex-row items-center justify-between'>
-                                <h1 className='flex text-3xl font-bold'>
-                                    {currentImage?.name}
-                                </h1>
+      {/* 4. Description */}
+      {currentImage.description && (
+        <p className="text-da-subtle text-sm leading-relaxed">{currentImage.description}</p>
+      )}
 
-                                <span>
-                                    Created: 05/25/2022
-                                </span>
-                            </div>
+      {/* 5. Comments */}
+      <div ref={commentRef}>
+        <CommentSection comments={comments} imageId={currentImage.id} />
+      </div>
 
-                            <div className='flex text-lg gap-x-1 items-end'>
-                                <span>
-                                    by
-                                </span>
-
-                                <span className='underline font-bold'>
-                                    <Link to={`/${currentImage?.userName}`}>
-                                        {currentImage?.userName}
-                                    </Link>
-                                </span>
-                            </div>
-
-                            <div className='flex gap-2'>
-                                <div className='flex gap-1'>
-                                    <HeartSolid className='w-5 h-5 text-pink-200'/>
-                                    <span>{ currentImage?.likes } Likes</span>
-                                </div>
-
-                                <span className='font-bold text-cyan-200'> / </span>
-
-                                <div className='flex gap-1'>
-                                    <ChatAltSolid className='w-5 h-5 text-cyan-200'/>
-                                    <span>{ comments.length } Comments</span>
-                                </div>
-
-                                <span className='font-bold text-cyan-200'> / </span>
-
-                                <div className='flex gap-1'>
-                                    <EyeSolid className='w-5 h-5 text-amber-200'/>
-                                    <span>{ currentImage?.views } Views</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <section className='flex h-20'>
-                        <p className='text-sm'>
-                            { currentImage?.description }
-                        </p>
-                    </section>
-
-                    <CommentSection comments={comments} imageId={currentImage.id} />
-                </section>
-            </div>
-
-            <section className='hidden lg:flex lg:flex-col w-1/3'>
-                <Gallery
-                    images={userImages}
-                    condensed/>
-            </section>
-        </main>
-    )
+      {/* 6. More by artist */}
+      {userImages.length > 1 && (
+        <div>
+          <h3 className="text-da-subtle text-sm uppercase tracking-wider mb-3">
+            More by{' '}
+            <Link to={`/${currentImage.userName}`} className="text-da-green">
+              @{currentImage.userName}
+            </Link>
+          </h3>
+          <div className="grid grid-cols-4 gap-3">
+            {userImages
+              .filter(img => img.id !== currentImage.id)
+              .slice(0, 4)
+              .map(img => (
+                <GalleryCard key={img.id} item={img} />
+              ))}
+          </div>
+        </div>
+      )}
+    </main>
+  )
 }
 
 export default ImageDetail

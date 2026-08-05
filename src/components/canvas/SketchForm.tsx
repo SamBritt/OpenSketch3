@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '@/lib/api'
+import { useAuthStore } from '@/store/authStore'
 
 interface Props {
   canvasRef: React.RefObject<HTMLCanvasElement>
@@ -37,9 +38,8 @@ export default function SketchForm({ canvasRef, bgColor, onClose }: Props) {
         name: name.trim(),
         description: description.trim(),
         imageUrl,
-        userId: 1,
       })
-      navigate('/')
+      navigate(`/${useAuthStore.getState().user?.userName ?? ''}`)
     } catch {
       setError('Something went wrong. Please try again.')
       setSaving(false)

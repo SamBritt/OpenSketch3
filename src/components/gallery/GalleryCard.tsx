@@ -20,7 +20,7 @@ export default function GalleryCard({ item }: { item: Image }) {
       ([entry]) => {
         if (entry.isIntersecting) {
           observer.disconnect()
-          api.get<Image>(`/images/${item.id}`, { params: { userId: 1 } }).then(({ data }) => {
+          api.get<Image>(`/images/${item.id}`).then(({ data }) => {
             if (data.imageUrl) {
               setImageUrl(data.imageUrl)
               cacheImageUrl(item.id, data.imageUrl)
@@ -36,23 +36,39 @@ export default function GalleryCard({ item }: { item: Image }) {
   }, [item.id])
 
   return (
-    <Link className='group' to={`/${item.userName}/${item.id}`}>
-      <div
-        ref={ref}
-        className='relative bg-zinc-600 w-full h-0 pb-full rounded-lg transition-all ease duration-200 group-hover:-translate-y-1 hover:shadow-xl overflow-hidden'
-      >
+    <Link
+      to={`/${item.userName}/${item.id}`}
+      className="group block bg-da-surface border border-da-border rounded-lg overflow-hidden transition-all duration-200 hover:border-da-green hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/50 mb-4 break-inside-avoid"
+    >
+      <div ref={ref} className="aspect-square bg-da-elevated">
         {imageUrl && (
           <img
             src={imageUrl}
             alt={item.name}
             onLoad={() => setLoaded(true)}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+            className={`object-cover w-full h-full transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
           />
         )}
-        <div className='absolute bottom-0 left-0 bg-zinc-800 w-full rounded-b-lg opacity-0 h-0 group-hover:opacity-100 group-hover:h-1/2 transition-all ease duration-300 px-2 py-1 text-sm text-gray-200'>
-          {item.name}
+      </div>
+      <div className="px-3 py-2">
+        <p className="text-sm text-da-text font-medium truncate">{item.name}</p>
+        <div className="flex justify-between text-xs text-da-subtle mt-1">
+          <span>@{item.userName}</span>
+          <span>&#9829; {item.likes}</span>
         </div>
       </div>
     </Link>
+  )
+}
+
+export function GalleryCardSkeleton() {
+  return (
+    <div className="block bg-da-surface border border-da-border rounded-lg overflow-hidden mb-4 break-inside-avoid animate-pulse">
+      <div className="aspect-square bg-da-elevated" />
+      <div className="px-3 py-2 space-y-2">
+        <div className="h-3 bg-da-elevated rounded w-3/4" />
+        <div className="h-3 bg-da-elevated rounded w-1/2" />
+      </div>
+    </div>
   )
 }

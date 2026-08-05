@@ -4,6 +4,7 @@ import { Image } from '@/types'
 
 interface ImageStore {
   images: Image[]
+  imagesLoading: boolean
   currentImage: Image | null
   currentImageLoading: boolean
   userImages: Image[]
@@ -24,6 +25,7 @@ const updateImage = (state: ImageStore, id: number, data: Image) => ({
 
 export const useImageStore = create<ImageStore>((set) => ({
   images: [],
+  imagesLoading: false,
   currentImage: null,
   currentImageLoading: false,
   userImages: [],
@@ -31,11 +33,12 @@ export const useImageStore = create<ImageStore>((set) => ({
 
   fetchImages: async () => {
     if (useImageStore.getState().images.length > 0) return
+    set({ imagesLoading: true })
     try {
-      const { data } = await api.get<Image[]>('/images', { params: { userId: 1 } })
-      set({ images: data })
+      const { data } = await api.get<Image[]>('/images')
+      set({ images: data, imagesLoading: false })
     } catch {
-      set({ images: [] })
+      set({ images: [], imagesLoading: false })
     }
   },
 
@@ -43,7 +46,7 @@ export const useImageStore = create<ImageStore>((set) => ({
     if (useImageStore.getState().currentImage?.id === id) return
     set({ currentImageLoading: true, currentImage: null })
     try {
-      const { data } = await api.get<Image>(`/images/${id}`, { params: { userId: 1 } })
+      const { data } = await api.get<Image>(`/images/${id}`)
       set({ currentImage: data, currentImageLoading: false })
     } catch {
       set({ currentImage: null, currentImageLoading: false })
@@ -54,7 +57,7 @@ export const useImageStore = create<ImageStore>((set) => ({
     const { loadedUserName } = useImageStore.getState()
     if (loadedUserName === userName) return
     try {
-      const { data } = await api.get<Image[]>(`/images/username/${userName}`, { params: { userId: 1 } })
+      const { data } = await api.get<Image[]>(`/images/username/${userName}`)
       set({ userImages: data, loadedUserName: userName })
     } catch {
       set({ userImages: [], loadedUserName: null })
@@ -70,12 +73,12 @@ export const useImageStore = create<ImageStore>((set) => ({
   },
 
   likeImage: async (id) => {
-    const { data } = await api.post<Image>(`/images/${id}/like`, { userId: 1 })
+    const { data } = await api.post<Image>(`/images/${id}/like`)
     set(state => updateImage(state, id, data))
   },
 
   unlikeImage: async (id) => {
-    const { data } = await api.delete<Image>(`/images/${id}/like`, { data: { userId: 1 } })
+    const { data } = await api.delete<Image>(`/images/${id}/like`)
     set(state => updateImage(state, id, data))
   },
 }))

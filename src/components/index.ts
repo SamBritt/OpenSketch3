@@ -1,5 +1,6 @@
-import SingleCarousel from './gallery/SingleCarousel'
 import Gallery from './gallery/Gallery'
 import CommentSection from './CommentSection'
+import Avatar from './Avatar'
+import ProtectedRoute from './ProtectedRoute'
 
-export { SingleCarousel, Gallery, CommentSection }
+export { Gallery, CommentSection, Avatar, ProtectedRoute }

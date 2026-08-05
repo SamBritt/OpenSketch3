@@ -18,7 +18,7 @@ export const useCommentStore = create<CommentStore>((set) => ({
   },
 
   postComment: async (imageId, comment) => {
-    const { data } = await api.post<Comment>('/comments', { userId: 1, imageId, comment })
+    const { data } = await api.post<Comment>('/comments', { imageId, comment })
     set(state => ({ comments: [...state.comments, data] }))
   },
 

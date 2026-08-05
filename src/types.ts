@@ -23,4 +23,10 @@ export interface User {
   userName: string
   firstName: string
   lastName: string
+  avatarUrl: string | null
+}
+
+export interface AuthResponse {
+  token: string
+  user: User
 }

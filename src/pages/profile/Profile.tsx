@@ -1,109 +1,95 @@
-import { useEffect } from "react"
-import { Gallery, SingleCarousel } from "@/components"
-import { AcademicCapIcon, CakeIcon, LocationMarkerIcon, PlusIcon } from '@heroicons/react/outline'
-import { Link, Outlet, useParams } from "react-router-dom"
-import { useImageStore } from "@/store/imageStore"
+import { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { Gallery, Avatar } from '@/components'
+import { useImageStore } from '@/store/imageStore'
+import api from '@/lib/api'
+import { User } from '@/types'
+
+type Tab = 'gallery' | 'about'
 
 const Profile = () => {
+  const params = useParams()
+  const { userImages, fetchUserImages } = useImageStore()
+  const [profileUser, setProfileUser] = useState<User | null>(null)
+  const [activeTab, setActiveTab] = useState<Tab>('gallery')
 
-    const params = useParams()
-    const { userImages, fetchUserImages } = useImageStore()
+  useEffect(() => {
+    if (params.userName) fetchUserImages(params.userName)
+  }, [params.userName])
 
-    useEffect(() => {
-        if (params.userName) fetchUserImages(params.userName)
-    }, [params.userName])
+  useEffect(() => {
+    if (!params.userName) return
+    api.get<User>(`/users/username/${params.userName}`).then(r => setProfileUser(r.data))
+  }, [params.userName])
 
+  return (
+    <main>
+      {/* Banner */}
+      <div className="h-48 bg-gradient-to-br from-da-surface to-da-bg border-b border-da-border" />
 
+      {/* Identity row */}
+      <div className="flex items-end gap-4 px-8 -mt-12 pb-4">
+        <div className="ring-4 ring-da-green rounded-full flex-shrink-0">
+          <Avatar userName={profileUser?.userName ?? params.userName ?? ''} avatarUrl={profileUser?.avatarUrl} size="lg" />
+        </div>
+        <div className="pb-2">
+          <h1 className="text-2xl font-bold text-da-text">
+            {profileUser?.userName ?? params.userName}
+          </h1>
+          <p className="text-da-subtle text-sm">
+            {profileUser ? `${profileUser.firstName} ${profileUser.lastName}` : ''}
+          </p>
+          <p className="text-da-subtle text-xs mt-1">{userImages.length} Deviations</p>
+        </div>
+      </div>
 
-    return (
-        <main className='m-8 space-y-8'>
-            <div className='absolute flex group left-0 bottom-0 h-14 w-24'>
-                <div className='flex justify-center items-center z-40 ml-2 left-0 bottom-0 w-14 h-14 rounded-full bg-zinc-600 shadow-lg group-hover:shadow-2xl'>
-                    <PlusIcon className='w-5 h-5 text-slate-200 group-hover:scale-110'/>
-                </div>
+      {/* Tab bar */}
+      <div className="flex border-b border-da-border px-8 mt-4">
+        {(['gallery', 'about'] as Tab[]).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 text-sm cursor-pointer capitalize transition-colors ${
+              activeTab === tab
+                ? 'text-da-green border-b-2 border-da-green -mb-px font-medium'
+                : 'text-da-subtle hover:text-da-text'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
 
-                <div className='absolute flex self-center left-0 bottom-1 ml-6 rounded-md z-30 transition-all ease duration-300 w-0 group-hover:w-60 opacity-0 group-hover:opacity-100 h-12 bg-zinc-600 shadow-xl text-center border border-zinc-400'>
-                    <div className='flex items-center justify-center w-full h-full hover:bg-zinc-700 text-slate-200'>
-                        Create
-                    </div>
-                </div>
-            </div>
+      {/* Tab content */}
+      <div className="px-8 py-6">
+        {activeTab === 'gallery' && (
+          <>
+            <Gallery images={userImages} />
+            {userImages.length === 0 && (
+              <p className="text-da-subtle text-sm">No deviations yet.</p>
+            )}
+          </>
+        )}
 
-            <section className='flex items-end h-60 bg-zinc-700 rounded-lg text-white p-8'>
-                <div className='flex flex-row h-24 gap-4'>
-                    <div className='h-24 w-24 bg-gray-200 rounded-full border-gray-800 border-4'></div>
-                    
-                    <div className='flex flex-col justify-between'>
-                        <h1 className='text-4xl font-bold'>
-                                sambritt2
-                        </h1>
-
-                        <p className='text-sm'>
-                            I like trees.
-                        </p>
-
-                        <div className='flex gap-2'>
-                            <span>8600 Followers</span>
-                            <span className='font-bold text-cyan-200'> / </span>
-                            <span>789 Following</span>
-                            <span className='font-bold text-cyan-200'> / </span>
-                            <span>266 Creations</span>
-                        </div>
-                    </div>
-
-                </div>
-            </section>
-
-            <SingleCarousel images={userImages}/>
-
-            <section className='flex flex-row gap-x-8'>
-                <div className='flex flex-col h-full w-1/2 gap-y-4'>
-                    <h1 className='text-2xl text-stone-200'>
-                        About
-                    </h1>
-
-                    <div className='flex flex-col bg-zinc-700 rounded-lg p-8 gap-y-8 text-gray-200'>
-                        <div>
-                            <h1 className='text-2xl'>
-                                @sambritt2
-                            </h1>
-
-                            <p className='italic'>
-                                Samuel J Britt
-                            </p>
-                        </div>
-
-                        <div className='flex flex-row gap-4'>
-                            <span className='flex gap-1'>
-                            <CakeIcon className='h-5 w-5 text-rose-400 m-0'/>
-                                September 16
-                            </span>
-                            <span className='flex gap-1'>
-                            <LocationMarkerIcon className='h-5 w-5 text-amber-400'/>
-                                Nashville
-                            </span>
-                            <span className='flex gap-1'>
-                            <AcademicCapIcon className='h-5 w-5 text-cyan-400'/>
-                            Member since 2022
-                            </span>
-                        </div>
-
-                        <p className='text-sm'>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                        </p>
-                    </div>
-                </div>
-
-                <div className='flex flex-col h-full w-1/2 gap-y-4'>
-                    <h1 className='text-2xl text-stone-200'>
-                        Images
-                    </h1>
-                    
-                    <Gallery images={userImages} />
-                </div>
-            </section>
-        </main>
-    )
+        {activeTab === 'about' && (
+          <div className="max-w-lg space-y-3 text-sm text-da-subtle">
+            <p>
+              <span className="text-da-text font-medium">Display name: </span>
+              {profileUser ? `${profileUser.firstName} ${profileUser.lastName}` : '—'}
+            </p>
+            <p>
+              <span className="text-da-text font-medium">Username: </span>
+              @{profileUser?.userName ?? params.userName}
+            </p>
+            <p>
+              <span className="text-da-text font-medium">Deviations: </span>
+              {userImages.length}
+            </p>
+          </div>
+        )}
+      </div>
+    </main>
+  )
 }
 
 export default Profile
