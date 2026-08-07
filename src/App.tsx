@@ -51,57 +51,71 @@ function App() {
           />
         </div>
 
-        <div className="flex items-center gap-4">
-          <Link to="/" className={navLinkClass('/')}>Explore</Link>
+        <ul className="flex items-center gap-4">
+          <li>
+            <Link to="/" className={navLinkClass('/')}>Explore</Link>
+          </li>
 
           {user && (
-            <Link to="/create" className={navLinkClass('/create')}>Create</Link>
+            <li>
+              <Link to="/create" className={navLinkClass('/create')}>Create</Link>
+            </li>
           )}
 
           {!user ? (
             <>
-              <Link
-                to="/login"
-                className="border border-da-border text-da-text text-sm px-3 py-1 rounded hover:border-da-green transition-colors"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="bg-da-green text-white text-sm px-3 py-1 rounded hover:bg-da-green-hover font-medium transition-colors"
-              >
-                Join
-              </Link>
+              <li>
+                <Link
+                  to="/login"
+                  className="border border-da-border text-da-text text-sm px-3 py-1 rounded hover:border-da-green transition-colors"
+                >
+                  Login
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/register"
+                  className="bg-da-green text-white text-sm px-3 py-1 rounded hover:bg-da-green-hover font-medium transition-colors"
+                >
+                  Join
+                </Link>
+              </li>
             </>
           ) : (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setDropdownOpen(v => !v)}
-                className="flex items-center"
-              >
-                <Avatar userName={user.userName} avatarUrl={user.avatarUrl} size="sm" />
-              </button>
+            <li>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(v => !v)}
+                  className="flex items-center"
+                >
+                  <Avatar userName={user.userName} avatarUrl={user.avatarUrl} size="sm" />
+                </button>
 
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 bg-da-surface border border-da-border rounded-lg shadow-xl w-48 py-1 z-50">
-                  <Link
-                    to="/settings"
-                    onClick={() => setDropdownOpen(false)}
-                    className="block px-4 py-2 text-sm text-da-text hover:bg-da-elevated transition-colors"
-                  >
-                    Account Settings
-                  </Link>
-                  <button
-                    onClick={() => { logout(); setDropdownOpen(false) }}
-                    className="block w-full text-left px-4 py-2 text-sm text-da-text hover:bg-da-elevated transition-colors"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
+                {dropdownOpen && (
+                  <ul className="absolute right-0 mt-2 bg-da-surface border border-da-border rounded-lg shadow-xl w-48 py-1 z-50">
+                    <li>
+                      <Link
+                        to="/settings"
+                        onClick={() => setDropdownOpen(false)}
+                        className="block px-4 py-2 text-sm text-da-text hover:bg-da-elevated transition-colors"
+                      >
+                        Account Settings
+                      </Link>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => { logout(); setDropdownOpen(false) }}
+                        className="block w-full text-left px-4 py-2 text-sm text-da-text hover:bg-da-elevated transition-colors"
+                      >
+                        Logout
+                      </button>
+                    </li>
+                  </ul>
+                )}
+              </div>
+            </li>
           )}
-        </div>
+        </ul>
       </nav>
 
       <Routes>

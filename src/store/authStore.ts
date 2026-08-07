@@ -10,7 +10,7 @@ interface AuthState {
   register: (userName: string, firstName: string, lastName: string, password: string) => Promise<void>
   logout: () => void
   restoreSession: () => Promise<void>
-  updateAvatar: (avatarUrl: string) => Promise<void>
+  updateProfile: (updates: { avatarUrl?: string; userName?: string; currentPassword?: string; newPassword?: string }) => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -51,8 +51,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  updateAvatar: async (avatarUrl) => {
-    const { data } = await api.patch<User>('/users/me', { avatarUrl })
-    set((state) => ({ user: state.user ? { ...state.user, ...data } : data }))
+  updateProfile: async (updates) => {
+    const { data } = await api.patch<{ user: User; token: string }>('/users/me', updates)
+    localStorage.setItem('os_token', data.token)
+    set({ user: data.user, token: data.token })
   },
 }))

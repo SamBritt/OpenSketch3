@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
+import { Button, Input, Textarea } from '@/components'
 
 interface Props {
   canvasRef: React.RefObject<HTMLCanvasElement>
@@ -16,7 +17,8 @@ export default function SketchForm({ canvasRef, bgColor, onClose }: Props) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const submit = async () => {
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!name.trim()) {
       setError('Name is required.')
       return
@@ -47,48 +49,47 @@ export default function SketchForm({ canvasRef, bgColor, onClose }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-4 w-64 pt-1">
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-gray-400 uppercase tracking-wider">Name</label>
-        <input
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="Untitled sketch"
-          autoFocus
-          className="bg-zinc-700 text-gray-200 rounded px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-blue-500 placeholder-zinc-500"
-        />
-      </div>
+    <form onSubmit={handleSave} className="flex flex-col gap-4 w-64 pt-1">
+      <Input
+        label="Name"
+        type="text"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        placeholder="Untitled sketch"
+        autoFocus
+      />
 
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-gray-400 uppercase tracking-wider">Description</label>
-        <textarea
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          placeholder="What's this sketch about?"
-          rows={4}
-          className="bg-zinc-700 text-gray-200 rounded px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-blue-500 placeholder-zinc-500 resize-none"
-        />
-      </div>
+      <Textarea
+        label="Description"
+        value={description}
+        onChange={e => setDescription(e.target.value)}
+        placeholder="What's this sketch about?"
+        rows={4}
+      />
 
       {error && <p className="text-red-400 text-sm">{error}</p>}
 
       <div className="flex gap-2">
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
+          type="button"
           onClick={onClose}
           disabled={saving}
-          className="flex-1 py-1.5 text-sm bg-zinc-700 text-gray-200 rounded hover:bg-zinc-600 disabled:opacity-40 transition-colors"
+          className="flex-1"
         >
           Cancel
-        </button>
-        <button
-          onClick={submit}
-          disabled={saving}
-          className="flex-1 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-500 disabled:opacity-50 transition-colors"
+        </Button>
+        <Button
+          variant="primary"
+          size="sm"
+          type="submit"
+          loading={saving}
+          className="flex-1"
         >
-          {saving ? 'Saving…' : 'Save'}
-        </button>
+          Save
+        </Button>
       </div>
-    </div>
+    </form>
   )
 }

@@ -1,13 +1,26 @@
 import { useRef, useState } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import Avatar from '@/components/Avatar'
+import { Button, Input } from '@/components'
+
+type Message = { type: 'success' | 'error'; text: string } | null
 
 export default function Settings() {
-  const { user, updateAvatar } = useAuthStore()
+  const { user, updateProfile } = useAuthStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [avatarSaving, setAvatarSaving] = useState(false)
+  const [avatarMessage, setAvatarMessage] = useState<Message>(null)
+
+  const [userName, setUserName] = useState(user?.userName ?? '')
+  const [userNameSaving, setUserNameSaving] = useState(false)
+  const [userNameMessage, setUserNameMessage] = useState<Message>(null)
+
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordMessage, setPasswordMessage] = useState<Message>(null)
 
   if (!user) return null
 
@@ -17,32 +30,74 @@ export default function Settings() {
     const reader = new FileReader()
     reader.onload = () => {
       setPreview(reader.result as string)
-      setMessage(null)
+      setAvatarMessage(null)
     }
     reader.readAsDataURL(file)
   }
 
-  const handleSave = async () => {
+  const handleAvatarSave = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!preview) return
-    setSaving(true)
-    setMessage(null)
+    setAvatarSaving(true)
+    setAvatarMessage(null)
     try {
-      await updateAvatar(preview)
-      setMessage({ type: 'success', text: 'Avatar updated successfully.' })
+      await updateProfile({ avatarUrl: preview })
+      setAvatarMessage({ type: 'success', text: 'Avatar updated successfully.' })
       setPreview(null)
     } catch {
-      setMessage({ type: 'error', text: 'Failed to update avatar. Please try again.' })
+      setAvatarMessage({ type: 'error', text: 'Failed to update avatar. Please try again.' })
     } finally {
-      setSaving(false)
+      setAvatarSaving(false)
+    }
+  }
+
+  const handleUserNameSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setUserNameSaving(true)
+    setUserNameMessage(null)
+    try {
+      await updateProfile({ userName })
+      setUserNameMessage({ type: 'success', text: 'Username updated successfully.' })
+    } catch (err: any) {
+      setUserNameMessage({
+        type: 'error',
+        text: err.response?.data?.error ?? 'Failed to update username.',
+      })
+    } finally {
+      setUserNameSaving(false)
+    }
+  }
+
+  const handlePasswordSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPasswordMessage(null)
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage({ type: 'error', text: 'New password and confirmation do not match.' })
+      return
+    }
+    setPasswordSaving(true)
+    try {
+      await updateProfile({ currentPassword, newPassword })
+      setPasswordMessage({ type: 'success', text: 'Password updated successfully.' })
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (err: any) {
+      setPasswordMessage({
+        type: 'error',
+        text: err.response?.data?.error ?? 'Failed to update password.',
+      })
+    } finally {
+      setPasswordSaving(false)
     }
   }
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
-      <div className="bg-da-surface border border-da-border rounded-xl p-8 w-full max-w-md flex flex-col gap-6">
+      <div className="bg-da-surface border border-da-border rounded-xl p-8 w-full max-w-lg flex flex-col gap-6">
         <h1 className="text-2xl font-bold text-da-text">Account Settings</h1>
 
-        <div className="flex flex-col gap-4">
+        <section aria-label="Avatar settings" className="flex flex-col gap-4">
           <h2 className="text-xs uppercase tracking-widest text-da-muted border-b border-da-border pb-2 mb-4">
             Avatar
           </h2>
@@ -59,19 +114,13 @@ export default function Settings() {
             )}
 
             <div className="flex flex-col gap-2">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 text-sm bg-da-elevated border border-da-border hover:border-da-green text-da-text rounded transition-colors"
-              >
+              <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
                 Change Avatar
-              </button>
+              </Button>
               {preview && (
-                <button
-                  onClick={() => setPreview(null)}
-                  className="px-4 py-2 text-sm bg-da-elevated border border-da-border hover:border-da-green text-da-text rounded transition-colors"
-                >
+                <Button variant="secondary" onClick={() => setPreview(null)}>
                   Cancel
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -85,21 +134,78 @@ export default function Settings() {
           />
 
           {preview && (
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="py-2 text-sm bg-da-green hover:bg-da-green-hover text-white font-semibold rounded w-full disabled:opacity-50 transition-colors"
-            >
-              {saving ? 'Saving…' : 'Save'}
-            </button>
+            <form onSubmit={handleAvatarSave}>
+              <Button variant="primary" type="submit" loading={avatarSaving} className="w-full">
+                Save
+              </Button>
+            </form>
           )}
 
-          {message && (
-            <p className={`text-sm ${message.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-              {message.text}
+          {avatarMessage && (
+            <p className={`text-sm ${avatarMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+              {avatarMessage.text}
             </p>
           )}
-        </div>
+        </section>
+
+        <section aria-label="Username settings" className="flex flex-col gap-4">
+          <h2 className="text-xs uppercase tracking-widest text-da-muted border-b border-da-border pb-2 mb-4">
+            Username
+          </h2>
+
+          <form onSubmit={handleUserNameSave} className="flex flex-col gap-4">
+            <Input
+              label="New Username"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+            />
+            <Button variant="primary" type="submit" loading={userNameSaving} className="w-full">
+              Save
+            </Button>
+          </form>
+
+          {userNameMessage && (
+            <p className={`text-sm ${userNameMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+              {userNameMessage.text}
+            </p>
+          )}
+        </section>
+
+        <section aria-label="Password settings" className="flex flex-col gap-4">
+          <h2 className="text-xs uppercase tracking-widest text-da-muted border-b border-da-border pb-2 mb-4">
+            Password
+          </h2>
+
+          <form onSubmit={handlePasswordSave} className="flex flex-col gap-4">
+            <Input
+              label="Current Password"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+            />
+            <Input
+              label="New Password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+            <Input
+              label="Confirm New Password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+            <Button variant="primary" type="submit" loading={passwordSaving} className="w-full">
+              Save
+            </Button>
+          </form>
+
+          {passwordMessage && (
+            <p className={`text-sm ${passwordMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+              {passwordMessage.text}
+            </p>
+          )}
+        </section>
       </div>
     </div>
   )

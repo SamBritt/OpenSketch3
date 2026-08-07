@@ -16,6 +16,7 @@ export interface Comment {
   imageId: number
   comment: string
   userName: string
+  avatarUrl?: string | null
 }
 
 export interface User {

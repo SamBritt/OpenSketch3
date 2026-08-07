@@ -24,10 +24,8 @@ const Profile = () => {
 
   return (
     <main>
-      {/* Banner */}
-      <div className="h-48 bg-gradient-to-br from-da-surface to-da-bg border-b border-da-border" />
+      <header className="h-48 bg-gradient-to-br from-da-surface to-da-bg border-b border-da-border" />
 
-      {/* Identity row */}
       <div className="flex items-end gap-4 px-8 -mt-12 pb-4">
         <div className="ring-4 ring-da-green rounded-full flex-shrink-0">
           <Avatar userName={profileUser?.userName ?? params.userName ?? ''} avatarUrl={profileUser?.avatarUrl} size="lg" />
@@ -43,7 +41,6 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Tab bar */}
       <div className="flex border-b border-da-border px-8 mt-4">
         {(['gallery', 'about'] as Tab[]).map(tab => (
           <button
@@ -60,32 +57,35 @@ const Profile = () => {
         ))}
       </div>
 
-      {/* Tab content */}
       <div className="px-8 py-6">
         {activeTab === 'gallery' && (
-          <>
+          <section aria-label="Gallery">
             <Gallery images={userImages} />
             {userImages.length === 0 && (
               <p className="text-da-subtle text-sm">No deviations yet.</p>
             )}
-          </>
+          </section>
         )}
 
         {activeTab === 'about' && (
-          <div className="max-w-lg space-y-3 text-sm text-da-subtle">
-            <p>
-              <span className="text-da-text font-medium">Display name: </span>
-              {profileUser ? `${profileUser.firstName} ${profileUser.lastName}` : '—'}
-            </p>
-            <p>
-              <span className="text-da-text font-medium">Username: </span>
-              @{profileUser?.userName ?? params.userName}
-            </p>
-            <p>
-              <span className="text-da-text font-medium">Deviations: </span>
-              {userImages.length}
-            </p>
-          </div>
+          <section aria-label="About">
+            <dl className="max-w-lg space-y-3 text-sm text-da-subtle">
+              <div>
+                <dt className="text-da-text font-medium inline">Display name: </dt>
+                <dd className="inline">
+                  {profileUser ? `${profileUser.firstName} ${profileUser.lastName}` : '—'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-da-text font-medium inline">Username: </dt>
+                <dd className="inline">@{profileUser?.userName ?? params.userName}</dd>
+              </div>
+              <div>
+                <dt className="text-da-text font-medium inline">Deviations: </dt>
+                <dd className="inline">{userImages.length}</dd>
+              </div>
+            </dl>
+          </section>
         )}
       </div>
     </main>

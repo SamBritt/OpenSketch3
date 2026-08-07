@@ -4,3 +4,4 @@ import Avatar from './Avatar'
 import ProtectedRoute from './ProtectedRoute'
 
 export { Gallery, CommentSection, Avatar, ProtectedRoute }
+export * from './ui'

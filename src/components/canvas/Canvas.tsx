@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { Button } from '@/components'
 
 const MAX_HISTORY = 50
 
@@ -153,21 +154,24 @@ export default function Canvas({ canvasRef, onDone }: Props) {
           { label: 'Redo', action: redo, disabled: redoCount === 0 },
           { label: 'Clear', action: clear, disabled: false },
         ].map(({ label, action, disabled }) => (
-          <button
+          <Button
             key={label}
+            variant="secondary"
+            size="sm"
             onClick={action}
             disabled={disabled}
-            className="px-4 py-1.5 text-sm bg-zinc-700 text-gray-200 rounded disabled:opacity-40 hover:bg-zinc-600 transition-colors"
           >
             {label}
-          </button>
+          </Button>
         ))}
-        <button
+        <Button
+          variant="primary"
+          size="sm"
           onClick={() => onDone(bgColor)}
-          className="ml-auto px-4 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors"
+          className="ml-auto"
         >
           Done
-        </button>
+        </Button>
       </div>
 
       {/* Left panel + canvas + right panel */}

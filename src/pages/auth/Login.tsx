@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
+import { Button, Input } from '@/components'
 
 const PencilIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#05b802" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -43,40 +44,30 @@ export default function Login() {
         </div>
 
         <form onSubmit={submit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-da-muted uppercase tracking-wider">Username</label>
-            <input
-              type="text"
-              value={userName}
-              onChange={e => setUserName(e.target.value)}
-              placeholder="Your username"
-              autoFocus
-              required
-              className="bg-da-elevated border border-da-border text-da-text rounded px-3 py-2 text-sm outline-none focus:border-da-green placeholder-da-muted transition-colors"
-            />
-          </div>
+          <Input
+            label="Username"
+            type="text"
+            value={userName}
+            onChange={e => setUserName(e.target.value)}
+            placeholder="Your username"
+            autoFocus
+            required
+          />
 
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-da-muted uppercase tracking-wider">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Your password"
-              required
-              className="bg-da-elevated border border-da-border text-da-text rounded px-3 py-2 text-sm outline-none focus:border-da-green placeholder-da-muted transition-colors"
-            />
-          </div>
+          <Input
+            label="Password"
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="Your password"
+            required
+          />
 
           {error && <p className="text-red-400 text-sm">{error}</p>}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-da-green hover:bg-da-green-hover text-white font-semibold py-2 rounded w-full disabled:opacity-50 transition-colors"
-          >
-            {loading ? 'Signing in…' : 'Sign In'}
-          </button>
+          <Button variant="primary" type="submit" loading={loading} className="w-full">
+            Sign In
+          </Button>
         </form>
 
         <p className="text-sm text-da-subtle text-center">

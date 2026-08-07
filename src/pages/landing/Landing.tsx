@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Gallery } from '@/components'
+import { Gallery, Button } from '@/components'
 import { useImageStore } from '@/store/imageStore'
 import { useAuthStore } from '@/store/authStore'
 
@@ -15,21 +15,15 @@ const Landing = () => {
   return (
     <main>
       {user === null && (
-        <section className="py-20 text-center">
+        <section aria-label="Hero" className="py-20 text-center">
           <h1 className="text-4xl font-bold text-da-text">Discover Digital Art</h1>
           <p className="text-da-subtle mt-2">The home for digital artists and sketch enthusiasts.</p>
-          <div className="mt-6 flex justify-center">
-            <Link
-              to="/create"
-              className="bg-da-green text-white px-6 py-2 rounded font-semibold hover:bg-da-green-hover transition-colors"
-            >
-              Start Creating
+          <div className="mt-6 flex justify-center gap-3">
+            <Link to="/create">
+              <Button variant="primary" size="lg">Start Creating</Button>
             </Link>
-            <a
-              href="#gallery"
-              className="border border-da-border text-da-text px-6 py-2 rounded ml-3 hover:border-da-green transition-colors"
-            >
-              Browse Art
+            <a href="#gallery">
+              <Button variant="secondary" size="lg">Browse Art</Button>
             </a>
           </div>
         </section>
@@ -53,11 +47,8 @@ const Landing = () => {
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <span className="text-5xl mb-4">&#9999;&#65039;</span>
             <p className="text-da-subtle text-sm mb-4">No art here yet. Be the first to create something.</p>
-            <Link
-              to="/create"
-              className="bg-da-green text-white px-6 py-2 rounded font-semibold hover:bg-da-green-hover transition-colors"
-            >
-              Start Creating
+            <Link to="/create">
+              <Button variant="primary" size="lg">Start Creating</Button>
             </Link>
           </div>
         )}
