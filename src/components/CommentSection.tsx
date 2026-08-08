@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useCommentStore } from '@/store/commentStore'
 import { useAuthStore } from '@/store/authStore'
 import { Comment } from '@/types'
 import Avatar from '@/components/Avatar'
 import { Button, Textarea } from '@/components'
+import { formatRelativeTime } from '@/lib/formatRelativeTime'
 
 const CommentSection = ({ comments, imageId }: { comments: Comment[], imageId: number }) => {
   const { postComment, deleteComment } = useCommentStore()
@@ -43,29 +45,35 @@ const CommentSection = ({ comments, imageId }: { comments: Comment[], imageId: n
         <span className="text-sm text-da-subtle">{comments.length}</span>
       </h2>
 
-      <div className="flex gap-x-2 w-full">
-        <Avatar userName={user?.userName ?? '?'} avatarUrl={user?.avatarUrl} size="md" />
-        <form onSubmit={handlePost} className="flex flex-col flex-1 gap-2">
-          <Textarea
-            value={text}
-            onChange={e => setText(e.target.value)}
-            onKeyDown={handleKey}
-            placeholder="Add a comment…"
-            rows={2}
-            className="w-full"
-          />
-          <Button
-            variant="primary"
-            size="sm"
-            type="submit"
-            disabled={submitting || !text.trim()}
-            loading={submitting}
-            className="self-end"
-          >
-            {submitting ? 'Posting…' : 'Post'}
-          </Button>
-        </form>
-      </div>
+      {user ? (
+        <div className="flex gap-x-2 w-full">
+          <Avatar userName={user.userName} avatarUrl={user.avatarUrl} size="md" />
+          <form onSubmit={handlePost} className="flex flex-col flex-1 gap-2">
+            <Textarea
+              value={text}
+              onChange={e => setText(e.target.value)}
+              onKeyDown={handleKey}
+              placeholder="Add a comment…"
+              rows={2}
+              className="w-full"
+            />
+            <Button
+              variant="primary"
+              size="sm"
+              type="submit"
+              disabled={submitting || !text.trim()}
+              loading={submitting}
+              className="self-end"
+            >
+              {submitting ? 'Posting…' : 'Post'}
+            </Button>
+          </form>
+        </div>
+      ) : (
+        <div className="bg-da-elevated border border-da-border rounded text-da-subtle text-sm px-4 py-3">
+          <Link to="/login" className="text-da-green hover:text-da-green-hover">Log in</Link> to leave a comment.
+        </div>
+      )}
 
       {comments.length ? (
         <ul className="flex flex-col gap-y-4">
@@ -74,7 +82,10 @@ const CommentSection = ({ comments, imageId }: { comments: Comment[], imageId: n
               <article className="flex w-full gap-x-3 items-start">
                 <Avatar userName={item.userName} avatarUrl={item.avatarUrl} size="md" />
                 <div className="flex-1 bg-da-elevated border border-da-border rounded-lg p-3 text-sm relative">
-                  <span className="text-da-green font-medium">@{item.userName}</span>
+                  <span className="text-da-green font-medium">@{item.userName}</span>{' '}
+                  <span className="text-da-muted text-xs" title={new Date(item.createdAt).toLocaleString()}>
+                    &middot; {formatRelativeTime(item.createdAt)}
+                  </span>
                   <p className="text-da-text mt-1">{item.comment}</p>
                   <button
                     onClick={() => handleDelete(item.id)}

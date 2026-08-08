@@ -61,14 +61,14 @@ Do NOT use old `zinc-*`, `stone-*`, or `blue-600` classes — use `da-*` tokens 
 ## Pages (`src/pages/`)
 - `Landing` — hero (logged-out only) + section header + masonry gallery with skeleton/empty state
 - `Profile` — banner, green-ringed avatar, Gallery/About tabs, fetches profileUser from `/api/users/username/:userName`
-- `ImageDetail` — stacked layout, like/comment actions, smooth scroll to comments, "More by @artist" row
+- `ImageDetail` — stacked layout, like/comment actions gated on auth (logged-out clicks redirect to `/login`), smooth scroll to comments, "More by @artist" row
 - `Create` — canvas + SketchForm side by side
 - `Login` / `Register` — da-palette cards with pencil logo, green buttons
 - `Settings` — avatar upload with preview, username update, and password change
 - Barrel export from `src/pages/index.ts`
 
 ## API response shapes
-- Image responses are flat: `userName` and `liked` are top-level fields (no nested `user` object)
+- Image responses are flat: `userName`, `liked`, and `avatarUrl` are top-level fields (no nested `user` object)
 - Auth responses: `{ token, user: { id, userName, firstName, lastName, avatarUrl } }`
 - Comment responses include `userName` at top level
 

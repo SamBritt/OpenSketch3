@@ -1,16 +1,56 @@
 import { useEffect, useRef } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { CommentSection, Avatar, Button } from '@/components'
 import GalleryCard from '@/components/gallery/GalleryCard'
 import { useImageStore } from '@/store/imageStore'
 import { useCommentStore } from '@/store/commentStore'
+import { useAuthStore } from '@/store/authStore'
+
+function ImageDetailSkeleton() {
+  return (
+    <article className="max-w-4xl mx-auto px-4 py-8 space-y-6 animate-pulse">
+      <figure className="rounded-xl overflow-hidden bg-da-surface border border-da-border">
+        <div className="w-full aspect-square bg-da-elevated" />
+      </figure>
+
+      <header className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-da-elevated" />
+          <div className="h-4 bg-da-elevated rounded w-24" />
+          <span className="text-da-border">•</span>
+          <div className="h-4 bg-da-elevated rounded w-32" />
+        </div>
+        <div className="flex gap-4">
+          <div className="h-4 bg-da-elevated rounded w-10" />
+          <div className="h-4 bg-da-elevated rounded w-10" />
+          <div className="h-4 bg-da-elevated rounded w-10" />
+        </div>
+      </header>
+
+      <div className="flex gap-3">
+        <div className="h-8 bg-da-elevated rounded w-24" />
+        <div className="h-8 bg-da-elevated rounded w-28" />
+      </div>
+
+      <section className="space-y-2">
+        <div className="h-3 bg-da-elevated rounded w-full" />
+        <div className="h-3 bg-da-elevated rounded w-2/3" />
+      </section>
+
+      <div className="h-5 bg-da-elevated rounded w-28" />
+    </article>
+  )
+}
 
 const ImageDetail = () => {
   const params = useParams()
+  const navigate = useNavigate()
+  const location = useLocation()
   const commentRef = useRef<HTMLDivElement>(null)
 
   const { currentImage, currentImageLoading, userImages, fetchImage, fetchUserImages, likeImage, unlikeImage } = useImageStore()
   const { comments, fetchComments } = useCommentStore()
+  const { user } = useAuthStore()
 
   useEffect(() => {
     if (!params.id || !params.userName) return
@@ -21,7 +61,7 @@ const ImageDetail = () => {
 
   const scrollToComments = () => commentRef.current?.scrollIntoView({ behavior: 'smooth' })
 
-  if (currentImageLoading) return null
+  if (currentImageLoading) return <ImageDetailSkeleton />
 
   if (!currentImage) return (
     <main className="flex items-center justify-center m-8 text-da-subtle">
@@ -44,7 +84,7 @@ const ImageDetail = () => {
 
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Avatar userName={currentImage.userName} size="sm" />
+          <Avatar userName={currentImage.userName} avatarUrl={currentImage.avatarUrl} size="sm" />
           <Link
             to={`/${currentImage.userName}`}
             className="text-da-green font-medium hover:underline"
@@ -74,7 +114,10 @@ const ImageDetail = () => {
         <Button
           variant={currentImage.liked ? 'primary' : 'secondary'}
           size="sm"
-          onClick={() => currentImage.liked ? unlikeImage(currentImage.id) : likeImage(currentImage.id)}
+          onClick={() => {
+            if (!user) return navigate('/login', { state: { from: location } })
+            return currentImage.liked ? unlikeImage(currentImage.id) : likeImage(currentImage.id)
+          }}
         >
           {currentImage.liked ? '♥ Liked' : '♡ Like'}
         </Button>

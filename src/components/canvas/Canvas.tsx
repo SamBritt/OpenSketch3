@@ -1,5 +1,9 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components'
+import VerticalSlider from '@/components/canvas/VerticalSlider'
+import LayerPanel from '@/components/canvas/LayerPanel'
+import PaletteSwitcher from '@/components/canvas/PaletteSwitcher'
+import { LayerMeta } from '@/types'
 
 const MAX_HISTORY = 50
 
@@ -10,6 +14,11 @@ const PALETTE = [
   '#8b5cf6', '#ec4899', '#92400e',
 ]
 
+type HistoryEntry = {
+  layers: LayerMeta[]
+  pixelSnapshot?: { layerId: string; imageData: ImageData }
+}
+
 interface Props {
   canvasRef: React.RefObject<HTMLCanvasElement>
   onDone: (bgColor: string) => void
@@ -17,66 +26,178 @@ interface Props {
 
 export default function Canvas({ canvasRef, onDone }: Props) {
   const isDrawingRef = useRef(false)
-  const undoStackRef = useRef<ImageData[]>([])
-  const redoStackRef = useRef<ImageData[]>([])
+  const layerCanvasesRef = useRef<Map<string, HTMLCanvasElement>>(new Map())
+  const undoStackRef = useRef<HistoryEntry[]>([])
+  const redoStackRef = useRef<HistoryEntry[]>([])
   const strokeBaseRef = useRef<ImageData | null>(null)
   const strokePointsRef = useRef<{ x: number; y: number }[]>([])
+  const firstLayerIdRef = useRef<string>('')
+
+  const [layers, setLayers] = useState<LayerMeta[]>(() => {
+    const id = crypto.randomUUID()
+    firstLayerIdRef.current = id
+    const canvas = document.createElement('canvas')
+    canvas.width = 600
+    canvas.height = 600
+    layerCanvasesRef.current.set(id, canvas)
+    return [{ id, name: 'Layer 1', visible: true, opacity: 100 }]
+  })
+  const [activeLayerId, setActiveLayerId] = useState<string>(() => firstLayerIdRef.current)
+  const [thumbnails, setThumbnails] = useState<Record<string, string>>({})
 
   const [brushSize, setBrushSize] = useState(3)
   const [opacity, setOpacity] = useState(100)
   const [color, setColor] = useState('#000000')
   const [bgColor, setBgColor] = useState('#ffffff')
-  const [eyedropperActive, setEyedropperActive] = useState(false)
-  const [hoveredColor, setHoveredColor] = useState<string | null>(null)
   const [undoCount, setUndoCount] = useState(0)
   const [redoCount, setRedoCount] = useState(0)
+  const [eyedropperActive, setEyedropperActive] = useState<boolean>(false)
+  const [hoveredColor, setHoveredColor] = useState<string | null>(null)
 
   const getCtx = () => {
     const canvas = canvasRef.current
     return canvas ? canvas.getContext('2d') : null
   }
 
-  const saveSnapshot = () => {
-    const canvas = canvasRef.current
+  const getLayerCtx = (id: string) => layerCanvasesRef.current.get(id)?.getContext('2d') ?? null
+
+  const rgbaToHex = (r: number, g: number, b: number) =>
+    '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')
+
+  const compositeLayers = (layersOverride?: LayerMeta[]) => {
     const ctx = getCtx()
-    if (!canvas || !ctx) return
+    if (!ctx) return
+    const list = layersOverride ?? layers
+    ctx.clearRect(0, 0, 600, 600)
+    for (const layer of list) {
+      if (!layer.visible) continue
+      const layerCanvas = layerCanvasesRef.current.get(layer.id)
+      if (!layerCanvas) continue
+      ctx.globalAlpha = layer.opacity / 100
+      ctx.drawImage(layerCanvas, 0, 0)
+    }
+    ctx.globalAlpha = 1
+  }
+
+  useEffect(() => {
+    compositeLayers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layers])
+
+  const updateThumbnail = (id: string) => {
+    const src = layerCanvasesRef.current.get(id)
+    if (!src) return
+    const smallCanvas = document.createElement('canvas')
+    smallCanvas.width = 64
+    smallCanvas.height = 64
+    const smallCtx = smallCanvas.getContext('2d')
+    if (!smallCtx) return
+    smallCtx.drawImage(src, 0, 0, 600, 600, 0, 0, 64, 64)
+    setThumbnails(t => ({ ...t, [id]: smallCanvas.toDataURL('image/png') }))
+  }
+
+  useEffect(() => {
+    updateThumbnail(firstLayerIdRef.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const reconcileLayerCanvases = (targetLayers: LayerMeta[]) => {
+    const targetIds = new Set(targetLayers.map(l => l.id))
+    for (const id of targetIds) {
+      if (!layerCanvasesRef.current.has(id)) {
+        const canvas = document.createElement('canvas')
+        canvas.width = 600
+        canvas.height = 600
+        layerCanvasesRef.current.set(id, canvas)
+      }
+    }
+    for (const id of [...layerCanvasesRef.current.keys()]) {
+      if (!targetIds.has(id)) layerCanvasesRef.current.delete(id)
+    }
+  }
+
+  const pushHistory = (entry: HistoryEntry) => {
     if (undoStackRef.current.length >= MAX_HISTORY) undoStackRef.current.shift()
-    undoStackRef.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height))
+    undoStackRef.current.push(entry)
     redoStackRef.current = []
     setUndoCount(undoStackRef.current.length)
     setRedoCount(0)
   }
 
   const undo = () => {
-    const canvas = canvasRef.current
-    const ctx = getCtx()
-    if (!canvas || !ctx || undoStackRef.current.length === 0) return
-    redoStackRef.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height))
-    ctx.putImageData(undoStackRef.current.pop()!, 0, 0)
+    if (undoStackRef.current.length === 0) return
+    const entry = undoStackRef.current.pop()!
+
+    let redoPixelSnapshot: HistoryEntry['pixelSnapshot']
+    if (entry.pixelSnapshot) {
+      const ctx = getLayerCtx(entry.pixelSnapshot.layerId)
+      redoPixelSnapshot = ctx
+        ? { layerId: entry.pixelSnapshot.layerId, imageData: ctx.getImageData(0, 0, 600, 600) }
+        : undefined
+    }
+    redoStackRef.current.push({ layers: [...layers], pixelSnapshot: redoPixelSnapshot })
+
+    reconcileLayerCanvases(entry.layers)
+    setLayers(entry.layers)
+
+    if (entry.pixelSnapshot && layerCanvasesRef.current.has(entry.pixelSnapshot.layerId)) {
+      getLayerCtx(entry.pixelSnapshot.layerId)!.putImageData(entry.pixelSnapshot.imageData, 0, 0)
+    }
+
+    if (!entry.layers.some(l => l.id === activeLayerId)) {
+      setActiveLayerId(entry.layers[entry.layers.length - 1]?.id ?? '')
+    }
+
+    compositeLayers(entry.layers)
+    entry.layers.forEach(l => updateThumbnail(l.id))
+
     setUndoCount(undoStackRef.current.length)
     setRedoCount(redoStackRef.current.length)
   }
 
   const redo = () => {
-    const canvas = canvasRef.current
-    const ctx = getCtx()
-    if (!canvas || !ctx || redoStackRef.current.length === 0) return
-    undoStackRef.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height))
-    ctx.putImageData(redoStackRef.current.pop()!, 0, 0)
+    if (redoStackRef.current.length === 0) return
+    const entry = redoStackRef.current.pop()!
+
+    let undoPixelSnapshot: HistoryEntry['pixelSnapshot']
+    if (entry.pixelSnapshot) {
+      const ctx = getLayerCtx(entry.pixelSnapshot.layerId)
+      undoPixelSnapshot = ctx
+        ? { layerId: entry.pixelSnapshot.layerId, imageData: ctx.getImageData(0, 0, 600, 600) }
+        : undefined
+    }
+    undoStackRef.current.push({ layers: [...layers], pixelSnapshot: undoPixelSnapshot })
+
+    reconcileLayerCanvases(entry.layers)
+    setLayers(entry.layers)
+
+    if (entry.pixelSnapshot && layerCanvasesRef.current.has(entry.pixelSnapshot.layerId)) {
+      getLayerCtx(entry.pixelSnapshot.layerId)!.putImageData(entry.pixelSnapshot.imageData, 0, 0)
+    }
+
+    if (!entry.layers.some(l => l.id === activeLayerId)) {
+      setActiveLayerId(entry.layers[entry.layers.length - 1]?.id ?? '')
+    }
+
+    compositeLayers(entry.layers)
+    entry.layers.forEach(l => updateThumbnail(l.id))
+
     setUndoCount(undoStackRef.current.length)
     setRedoCount(redoStackRef.current.length)
   }
 
+  // Clears only the active layer's content (Procreate convention) — other layers are untouched.
   const clear = () => {
-    const canvas = canvasRef.current
-    const ctx = getCtx()
-    if (!canvas || !ctx) return
-    saveSnapshot()
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    const ctx = getLayerCtx(activeLayerId)
+    if (!ctx) return
+    pushHistory({
+      layers: [...layers],
+      pixelSnapshot: { layerId: activeLayerId, imageData: ctx.getImageData(0, 0, 600, 600) },
+    })
+    ctx.clearRect(0, 0, 600, 600)
+    compositeLayers()
+    updateThumbnail(activeLayerId)
   }
-
-  const rgbaToHex = (r: number, g: number, b: number) =>
-    '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')
 
   const replayStroke = (ctx: CanvasRenderingContext2D) => {
     const points = strokePointsRef.current
@@ -98,12 +219,11 @@ export default function Canvas({ canvasRef, onDone }: Props) {
 
   const startDraw = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (eyedropperActive) return
-    const canvas = canvasRef.current
-    const ctx = getCtx()
-    if (!canvas || !ctx) return
-    saveSnapshot()
+    const ctx = getLayerCtx(activeLayerId)
+    if (!ctx) return
     isDrawingRef.current = true
-    strokeBaseRef.current = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    strokeBaseRef.current = ctx.getImageData(0, 0, 600, 600)
+    pushHistory({ layers: [...layers], pixelSnapshot: { layerId: activeLayerId, imageData: strokeBaseRef.current } })
     strokePointsRef.current = [{ x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY }]
   }
 
@@ -116,12 +236,20 @@ export default function Canvas({ canvasRef, onDone }: Props) {
       return
     }
     if (!isDrawingRef.current || !strokeBaseRef.current) return
-    const canvas = canvasRef.current
-    const ctx = getCtx()
-    if (!canvas || !ctx) return
+    const ctx = getLayerCtx(activeLayerId)
+    if (!ctx) return
     strokePointsRef.current.push({ x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY })
     ctx.putImageData(strokeBaseRef.current, 0, 0)
     replayStroke(ctx)
+    compositeLayers()
+  }
+
+  const stopDraw = () => {
+    if (isDrawingRef.current) updateThumbnail(activeLayerId)
+    isDrawingRef.current = false
+    strokeBaseRef.current = null
+    strokePointsRef.current = []
+    setHoveredColor(null)
   }
 
   const pickColor = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -134,15 +262,64 @@ export default function Canvas({ canvasRef, onDone }: Props) {
     setHoveredColor(null)
   }
 
-  const stopDraw = () => {
-    isDrawingRef.current = false
-    strokeBaseRef.current = null
-    strokePointsRef.current = []
+  const addLayer = () => {
+    pushHistory({ layers: [...layers] })
+    const id = crypto.randomUUID()
+    const canvas = document.createElement('canvas')
+    canvas.width = 600
+    canvas.height = 600
+    layerCanvasesRef.current.set(id, canvas)
+    setLayers(ls => [...ls, { id, name: `Layer ${layers.length + 1}`, visible: true, opacity: 100 }])
+    setActiveLayerId(id)
   }
 
-  const leaveCanvas = () => {
-    stopDraw()
-    setHoveredColor(null)
+  const deleteLayer = (id: string) => {
+    if (layers.length <= 1) return
+    if (!window.confirm('Delete this layer?')) return
+    pushHistory({
+      layers: [...layers],
+      pixelSnapshot: { layerId: id, imageData: getLayerCtx(id)!.getImageData(0, 0, 600, 600) },
+    })
+    layerCanvasesRef.current.delete(id)
+    const deletedIndex = layers.findIndex(l => l.id === id)
+    const newLayers = layers.filter(l => l.id !== id)
+    setLayers(newLayers)
+    if (activeLayerId === id) {
+      setActiveLayerId(newLayers[Math.min(deletedIndex, newLayers.length - 1)].id)
+    }
+  }
+
+  const renameLayer = (id: string, name: string) => {
+    pushHistory({ layers: [...layers] })
+    setLayers(ls => ls.map(l => (l.id === id ? { ...l, name } : l)))
+  }
+
+  const toggleVisibility = (id: string) => {
+    pushHistory({ layers: [...layers] })
+    setLayers(ls => ls.map(l => (l.id === id ? { ...l, visible: !l.visible } : l)))
+  }
+
+  const updateLayerOpacity = (id: string, value: number) => {
+    pushHistory({ layers: [...layers] })
+    setLayers(ls => ls.map(l => (l.id === id ? { ...l, opacity: value } : l)))
+  }
+
+  const moveLayerUp = (id: string) => {
+    const index = layers.findIndex(l => l.id === id)
+    if (index === -1 || index === layers.length - 1) return
+    pushHistory({ layers: [...layers] })
+    const newLayers = [...layers]
+    ;[newLayers[index], newLayers[index + 1]] = [newLayers[index + 1], newLayers[index]]
+    setLayers(newLayers)
+  }
+
+  const moveLayerDown = (id: string) => {
+    const index = layers.findIndex(l => l.id === id)
+    if (index <= 0) return
+    pushHistory({ layers: [...layers] })
+    const newLayers = [...layers]
+    ;[newLayers[index], newLayers[index - 1]] = [newLayers[index - 1], newLayers[index]]
+    setLayers(newLayers)
   }
 
   return (
@@ -180,58 +357,37 @@ export default function Canvas({ canvasRef, onDone }: Props) {
         <div className="flex flex-col items-center gap-8 py-1">
 
           {/* Brush size */}
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-xs text-gray-400 uppercase tracking-wider">Size</span>
-            <div style={{ height: 140, width: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <input
-                type="range"
-                min={1}
-                max={50}
-                value={brushSize}
-                onChange={e => setBrushSize(Number(e.target.value))}
-                style={{ width: 140, transform: 'rotate(-90deg)' }}
-              />
-            </div>
-            <span className="text-xs text-gray-500">{brushSize}px</span>
-          </div>
+          <VerticalSlider
+            label="Size"
+            min={1}
+            max={50}
+            value={brushSize}
+            onChange={setBrushSize}
+            valueLabel={`${brushSize}px`}
+          />
 
-          {/* Eyedropper */}
+          {/* Color preview / eyedropper */}
           <div className="flex flex-col items-center gap-2">
             <button
+              type="button"
               onClick={() => setEyedropperActive(v => !v)}
-              title={eyedropperActive ? 'Cancel' : 'Pick color'}
-              className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
-                eyedropperActive
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-zinc-700 text-gray-200 hover:bg-zinc-600'
+              className={`w-8 h-8 rounded border-2 overflow-hidden ${
+                eyedropperActive ? 'border-da-green' : 'border-da-border'
               }`}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
-              </svg>
-            </button>
-            <div
-              className="w-7 h-7 rounded border-2 border-zinc-600"
               style={{ backgroundColor: hoveredColor ?? color }}
-              title={hoveredColor ?? color}
+              title={eyedropperActive ? 'Click canvas to pick a color' : 'Pick color from canvas'}
             />
           </div>
 
           {/* Opacity */}
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-xs text-gray-400 uppercase tracking-wider">Alpha</span>
-            <div style={{ height: 140, width: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <input
-                type="range"
-                min={1}
-                max={100}
-                value={opacity}
-                onChange={e => setOpacity(Number(e.target.value))}
-                style={{ width: 140, transform: 'rotate(-90deg)' }}
-              />
-            </div>
-            <span className="text-xs text-gray-500">{opacity}%</span>
-          </div>
+          <VerticalSlider
+            label="Alpha"
+            min={1}
+            max={100}
+            value={opacity}
+            onChange={setOpacity}
+            valueLabel={`${opacity}%`}
+          />
 
         </div>
 
@@ -245,15 +401,13 @@ export default function Canvas({ canvasRef, onDone }: Props) {
           onMouseDown={startDraw}
           onMouseMove={draw}
           onMouseUp={stopDraw}
-          onMouseLeave={leaveCanvas}
+          onMouseLeave={stopDraw}
           onClick={pickColor}
         />
 
         {/* Right panel: color pickers */}
-        <div className="flex flex-col items-center gap-2 py-1">
-          <span className="text-xs text-gray-400 uppercase tracking-wider">Color</span>
-
-          <div className="relative w-8 h-8 rounded border-2 border-zinc-500 overflow-hidden" title="Custom color">
+        <div className="flex flex-col items-start gap-2 py-1">
+          <div className="relative w-8 h-8 rounded border-2 border-da-border overflow-hidden" title="Custom color">
             <div className="w-full h-full" style={{ backgroundColor: color }} />
             <input
               type="color"
@@ -263,19 +417,7 @@ export default function Canvas({ canvasRef, onDone }: Props) {
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-1">
-            {PALETTE.map(swatch => (
-              <button
-                key={swatch}
-                onClick={() => setColor(swatch)}
-                title={swatch}
-                className={`w-5 h-5 rounded-sm border transition-transform hover:scale-110 ${
-                  color === swatch ? 'border-blue-400 scale-110' : 'border-zinc-600'
-                }`}
-                style={{ backgroundColor: swatch }}
-              />
-            ))}
-          </div>
+          <PaletteSwitcher defaultColors={PALETTE} color={color} onColorChange={setColor} />
 
           <div className="flex flex-col items-center gap-1 mt-2">
             <span className="text-xs text-gray-400 uppercase tracking-wider">BG</span>
@@ -288,6 +430,22 @@ export default function Canvas({ canvasRef, onDone }: Props) {
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
             </div>
+          </div>
+
+          <div className="mt-4 w-full">
+            <LayerPanel
+              layers={layers}
+              activeLayerId={activeLayerId}
+              thumbnails={thumbnails}
+              onSelect={setActiveLayerId}
+              onToggleVisibility={toggleVisibility}
+              onRename={renameLayer}
+              onDelete={deleteLayer}
+              onMoveUp={moveLayerUp}
+              onMoveDown={moveLayerDown}
+              onOpacityChange={updateLayerOpacity}
+              onAddLayer={addLayer}
+            />
           </div>
         </div>
 

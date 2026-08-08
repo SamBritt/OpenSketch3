@@ -16,7 +16,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
-  isLoading: false,
+  isLoading: true,
 
   login: async (userName, password) => {
     const { data } = await api.post<AuthResponse>('/auth/login', { userName, password })

@@ -8,6 +8,21 @@ export interface Image {
   likes: number
   views: number
   liked: boolean
+  avatarUrl?: string | null
+}
+
+export interface LayerMeta {
+  id: string
+  name: string
+  visible: boolean
+  opacity: number
+}
+
+export interface Palette {
+  id: number
+  userId: number
+  name: string
+  colors: string[]
 }
 
 export interface Comment {
@@ -17,6 +32,7 @@ export interface Comment {
   comment: string
   userName: string
   avatarUrl?: string | null
+  createdAt: string
 }
 
 export interface User {
